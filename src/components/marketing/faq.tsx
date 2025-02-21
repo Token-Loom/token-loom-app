@@ -2,29 +2,34 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/
 
 const faqs = [
   {
-    question: 'How does burning affect token value?',
+    question: 'What types of tokens can I burn?',
     answer:
-      'Token burning reduces the total supply, which can potentially increase the value of remaining tokens if demand remains constant or increases. However, the actual impact depends on various market factors.'
+      'You can burn both regular Solana tokens (SPL tokens) and LP tokens from major DEXes like Raydium and Orca. Our platform supports any valid SPL token in your wallet.'
   },
   {
-    question: 'Is burning permanent?',
+    question: 'How does LP token burning work?',
     answer:
-      'Yes, token burning is an irreversible process. Once tokens are sent to a burn address, they can never be recovered or reused. This permanent reduction in supply is verifiable on the Solana blockchain.'
+      'LP token burning permanently removes your liquidity pool tokens from circulation. This is useful for reducing LP token supply or exiting a liquidity position permanently. The process is similar to regular token burns but includes additional verification of the LP token pair.'
   },
   {
-    question: 'How are fees calculated?',
+    question: 'What is controlled burning?',
     answer:
-      'We offer two burn options: Instant Burn (0.1 SOL fee) for immediate processing, and Controlled Burn (0.2 SOL fee) for scheduled burns. These fees cover transaction costs and platform maintenance.'
+      'Controlled burning allows you to schedule token burns over time instead of burning them all at once. This feature works for both regular and LP tokens, helping you manage token supply reduction strategically.'
   },
   {
-    question: 'How can I verify my burn?',
+    question: 'Is burning tokens safe?',
     answer:
-      'Every burn transaction is recorded on the Solana blockchain and can be verified through our dashboard or directly on Solana Explorer. We provide transaction hashes and detailed burn analytics.'
+      'Yes, our platform implements multiple security measures including transaction verification, secure burn addresses, and real-time status monitoring. All burns are verifiable on-chain and irreversible.'
   },
   {
-    question: 'What happens to burned tokens?',
+    question: 'What are the fees for burning tokens?',
     answer:
-      'Burned tokens are sent to a verifiable burn address where they become permanently inaccessible. This process is transparent and can be tracked through our platform or blockchain explorers.'
+      'We charge a small platform fee (0.1 SOL for instant burns, 0.2 SOL for controlled burns) plus standard Solana network fees. The fees are the same for both regular and LP token burns.'
+  },
+  {
+    question: 'How do I verify my burns?',
+    answer:
+      'All burns are recorded on the Solana blockchain and can be verified through our dashboard or any Solana explorer. We provide transaction signatures and detailed burn history for both regular and LP token burns.'
   }
 ]
 
@@ -40,7 +45,7 @@ export function FAQ() {
               Frequently Asked Questions
             </h2>
             <p className='mx-auto max-w-2xl text-[#A3A3A3]'>
-              Find answers to common questions about our token burning platform and process.
+              Common questions about our token burning platform and how it works.
             </p>
           </div>
 

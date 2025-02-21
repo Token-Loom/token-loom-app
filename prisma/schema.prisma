@@ -9,8 +9,11 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider     = "postgresql"
+  url          = env("DATABASE_URL")
+  directUrl    = env("DIRECT_URL")
+  // Enable connection pooling
+  relationMode = "prisma"
 }
 
 // Optional user model for registered users
@@ -55,6 +58,13 @@ model BurnTransaction {
   tokenMint      String
   tokenName      String
   tokenSymbol    String
+  tokenType      TokenType       @default(REGULAR)
+  // LP token specific fields
+  lpToken0Mint   String? // First token in the LP pair
+  lpToken1Mint   String? // Second token in the LP pair
+  lpToken0Symbol String? // Symbol of first token
+  lpToken1Symbol String? // Symbol of second token
+  lpPoolAddress  String? // Address of the liquidity pool
   amount         Decimal // Total amount to be burned
   burnWalletId   String
   burnWallet     BurnWallet      @relation(fields: [burnWalletId], references: [id])
@@ -118,15 +128,22 @@ model Notification {
 
 // Statistics for each token
 model BurnStatistic {
-  id                 String   @id @default(uuid())
-  tokenMint          String   @unique
+  id                 String    @id @default(uuid())
+  tokenMint          String    @unique
   tokenSymbol        String
+  tokenType          TokenType @default(REGULAR)
   totalBurned        Decimal
-  totalTransactions  Int      @default(0)
-  instantBurns       Int      @default(0)
-  controlledBurns    Int      @default(0)
-  totalFeesCollected Decimal  @default(0)
-  lastUpdated        DateTime @updatedAt
+  totalTransactions  Int       @default(0)
+  instantBurns       Int       @default(0)
+  controlledBurns    Int       @default(0)
+  totalFeesCollected Decimal   @default(0)
+  lastUpdated        DateTime  @updatedAt
+  // LP token specific fields
+  lpToken0Mint       String?
+  lpToken1Mint       String?
+  lpToken0Symbol     String?
+  lpToken1Symbol     String?
+  lpPoolAddress      String?
 }
 
 // Global statistics
@@ -159,30 +176,30 @@ enum BurnStatus {
   PENDING
   PROCESSING
   CONFIRMED
-  FAILED
-  CANCELLED
-  SCHEDULED
   RETRYING
+  FAILED
 }
 
 enum ExecutionStatus {
   STARTED
   COMPLETED
   FAILED
-  RETRYING
 }
 
 enum NotificationType {
-  BURN_SCHEDULED
-  BURN_STARTED
   BURN_COMPLETED
   BURN_FAILED
-  RETRY_SCHEDULED
+  BURN_SCHEDULED
 }
 
 enum BurnType {
   INSTANT
   CONTROLLED
+}
+
+enum TokenType {
+  REGULAR
+  LP
 }
 
 enum BurnRate {

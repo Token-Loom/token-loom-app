@@ -42,4 +42,19 @@ export interface TokenInfo {
   uiAmount: number
 }
 
+export interface LPTokenInfo extends TokenInfo {
+  isLPToken: true
+  token0?: {
+    mint: string
+    symbol: string
+  }
+  token1?: {
+    mint: string
+    symbol: string
+  }
+  poolAddress?: string
+}
+
+export type TokenType = TokenInfo | LPTokenInfo
+
 export type BurnRate = 'DAILY' | 'WEEKLY' | 'MONTHLY'

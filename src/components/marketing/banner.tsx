@@ -14,8 +14,8 @@ export function Banner() {
             Burn with Confidence.
           </h1>
           <p className='mb-8 text-lg text-[#E6E6E6] sm:text-xl'>
-            The most secure and transparent way to burn Solana tokens. Take control of your token&apos;s supply with our
-            advanced burning platform.
+            The most secure and transparent way to burn Solana tokens. Supports both regular tokens and LP tokens with
+            advanced scheduling and controlled burns.
           </p>
           <div className='flex flex-col items-center gap-4 sm:flex-row sm:justify-center'>
             <Link href='/burn'>
@@ -23,7 +23,7 @@ export function Banner() {
                 size='lg'
                 className='min-w-[150px] bg-gradient-to-r from-[#9945FF] to-[#14F195] text-white font-bold text-md hover:opacity-90 sm:w-auto'
               >
-                Burn
+                Start Burning
               </Button>
             </Link>
           </div>

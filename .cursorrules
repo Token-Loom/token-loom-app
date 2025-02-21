@@ -119,61 +119,105 @@ If needed, you can further use the `web_scraper.py` file to scrape the web page 
 
 # Scratchpad
 
-### Current Task: Implementing Controlled Burns
+### Current Task: Adding LP Token Burn Support
+
+Task Description: Add support for burning liquidity pool tokens along with regular tokens. LP tokens should have the same functionality as regular tokens, including immediate and controlled burns.
 
 Implementation Steps:
+
 [X] 1. Enhance Database Schema
 
-- Added burn schedule status tracking
-- Added notification preferences
-- Added burn execution history
-- Added retry mechanism
-- Added detailed status tracking
+- Add LP token type to distinguish between regular and LP tokens
+- Add LP token pair information (token0, token1)
+- Add LP token pool address
+- Update burn statistics to track LP burns separately
 
-[X] 2. Create Burn Scheduler Service
+[X] 2. Update Solana Integration
 
-- Implemented scheduler worker
-- Added burn execution logic
-- Added retry mechanism
-- Added logging
-- Added notification handling
+- Add LP token detection and balance fetching
+- Add LP token metadata fetching
+- Implement LP token burn instructions
+- Update fee calculation for LP tokens
 
-[X] 3. Add Status Monitoring
+[X] 3. Update UI Components
 
-- Create API endpoint for status checks
-- Add polling-based updates
-- Create status dashboard component
-- Add transaction history view
-- Created REST API endpoint for burn status
-- Implemented polling mechanism for updates
-- Added client-side polling hook
-- Created status dashboard component
-- Organized pages: landing page at / and burn dashboard at /burn
-- Added transaction history view with filtering and pagination
+- Enhance token selector to show LP tokens
+- Add LP token information display
+- Update burn form to handle LP tokens
+- Add LP-specific fields and validation
 
-[X] 4. Create Admin Dashboard
+[X] 4. Update Backend Services
 
-- Added burn schedule management
-- Added manual controls
-- Added monitoring interface
-- Created admin-only access control
-- Implemented system status monitoring
-- Added schedule control endpoints
-- Added system configuration management
+- Modify burn scheduler for LP tokens
+- Update status tracking for LP burns
+- Enhance error handling for LP operations
+- Update notification system for LP burns
 
-[ ] 5. Final Testing and Deployment
+[X] 5. Update API Endpoints
 
-- Test all components
-- Verify polling updates
-- Check admin functionality
-- Deploy to production
+- Modify burn endpoints to handle LP tokens
+- Add LP token validation
+- Update response formats for LP data
+
+[ ] 6. Testing and Documentation
+
+- Test LP token detection
+- Test immediate and controlled burns
+- Test error scenarios
+- Update documentation
 
 Next Steps:
 
-1. Test all components thoroughly
-2. Verify polling updates are working correctly
-3. Test admin functionality with different roles
-4. Prepare for production deployment
+1. Test the LP token detection and burning functionality
+2. Add error handling for LP-specific scenarios
+3. Update documentation with LP token support
+
+### Completed Changes:
+
+1. Database Schema:
+
+   - Added TokenType enum (REGULAR, LP)
+   - Added LP token fields to BurnTransaction
+   - Added LP token fields to BurnStatistic
+
+2. Solana Integration:
+
+   - Created LP token detection logic
+   - Added LP token metadata fetching
+   - Implemented LP token burn functionality
+   - Added LP-specific fee handling
+
+3. UI Components:
+
+   - Updated token selector to show LP pairs
+   - Added LP token details display
+   - Modified burn form for LP tokens
+   - Added type safety with TypeScript
+
+4. Backend Services:
+
+   - Updated burn scheduler for LP tokens
+   - Enhanced error handling
+   - Modified status tracking
+   - Updated notification messages
+
+5. API Endpoints:
+   - Modified burn endpoint to handle LP data
+   - Added LP token validation
+   - Updated response format
+
+### Remaining Tasks:
+
+1. Testing:
+
+   - Test LP token detection
+   - Test burn operations
+   - Test error scenarios
+
+2. Documentation:
+   - Update API documentation
+   - Add LP token examples
+   - Document new features
 
 ### Page Organization:
 
@@ -232,3 +276,121 @@ Current setup:
 - Status dashboard with auto-refresh
 - Transaction history with filtering and export
 - Admin controls for system management
+
+### Current Task: Implementing Testing Framework
+
+Task Description: Add comprehensive testing to the project, including unit tests, integration tests, and end-to-end tests.
+
+Implementation Steps:
+
+[X] 1. Set up Testing Framework
+
+- Install Jest and React Testing Library ✓
+- Configure Jest for Next.js and TypeScript ✓
+- Set up test environment and mocks ✓
+- Add test scripts to package.json ✓
+
+[/] 2. Unit Tests
+
+- Set up unit test structure ✓
+- Test utility functions ✓
+- Test hooks and custom hooks
+- Test state management
+- Test API client functions
+
+[ ] 3. Integration Tests
+
+- Test API endpoints
+- Test database operations
+- Test Solana interactions
+- Test burn operations
+- Test scheduling system
+
+[ ] 4. Component Tests
+
+- Test UI components
+- Test form validations
+- Test user interactions
+- Test error states
+- Test loading states
+
+[ ] 5. End-to-End Tests
+
+- Set up Cypress or Playwright
+- Test critical user flows
+- Test wallet integration
+- Test burn workflows
+- Test admin workflows
+
+[ ] 6. CI/CD Integration
+
+- Add GitHub Actions workflow
+- Configure test automation
+- Add test coverage reporting
+- Add performance testing
+
+Next Steps:
+
+1. Create tests for custom hooks (useTokenBalances, useToast)
+2. Test state management with React Query
+3. Test API client functions
+
+### Test Structure:
+
+```
+__tests__/
+├── unit/
+│   ├── utils/
+│   ├── hooks/
+│   └── api/
+├── integration/
+│   ├── api/
+│   ├── db/
+│   └── solana/
+├── components/
+│   ├── ui/
+│   └── forms/
+└── e2e/
+    ├── flows/
+    └── pages/
+```
+
+### Test Categories:
+
+1. Unit Tests:
+
+   - Utility functions ✓
+   - Custom hooks
+   - State management
+   - API clients
+   - Form validation
+
+2. Integration Tests:
+
+   - API endpoints
+   - Database operations
+   - Solana interactions
+   - Burn operations
+   - Scheduling system
+
+3. Component Tests:
+
+   - UI components
+   - Form components
+   - Error handling
+   - Loading states
+   - User interactions
+
+4. E2E Tests:
+   - User flows
+   - Wallet connection
+   - Burn workflows
+   - Admin operations
+   - Error scenarios
+
+### Lessons Learned:
+
+- When writing tests, always check the actual implementation before writing test expectations
+- Use CommonJS format for Jest configuration files to avoid ESM-related issues
+- Add eslint-disable comments for require() imports in Jest config files
+- Keep test expectations precise and match the actual implementation behavior

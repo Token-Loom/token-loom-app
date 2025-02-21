@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import { Textarea } from '@/components/ui/textarea'
 import { Button } from '@/components/ui/button'
-import { useTokenBalances } from '@/lib/hooks/use-token-balances'
+import { useTokenBalances } from '@/hooks/use-token-balances'
 import { BurnFormData, burnFormSchema } from '@/lib/types/burn'
 import { CalendarIcon, PlusCircle, Trash2 } from 'lucide-react'
 import { Calendar } from '@/components/ui/calendar'
@@ -23,6 +23,8 @@ import { useToast } from '@/hooks/use-toast'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Loader2 } from 'lucide-react'
 import { isAdminWallet } from '@/lib/solana/admin'
+import { burnLPTokens } from '@/lib/solana/lp-burn'
+import { TokenType, LPTokenInfo } from '@/lib/types/burn'
 
 export function BurnForm() {
   const { publicKey, signTransaction } = useWallet()
@@ -33,6 +35,7 @@ export function BurnForm() {
   const [txSignature, setTxSignature] = useState<string | null>(null)
   const { toast } = useToast()
   const isAdmin = publicKey ? isAdminWallet(publicKey) : false
+  const [selectedToken, setSelectedToken] = useState<TokenType | null>(null)
 
   const form = useForm<BurnFormData>({
     resolver: zodResolver(burnFormSchema),
@@ -69,128 +72,92 @@ export function BurnForm() {
       setTxSignature(null)
 
       // Get token info for the selected token
-      const selectedToken = tokens.find(t => t.mint === data.tokenMint)
-      if (!selectedToken) {
+      const token = tokens.find(t => t.mint === data.tokenMint)
+      if (!token) {
         throw new Error('Selected token not found')
       }
 
-      // For instant burns, execute immediately
-      if (data.burnType === 'INSTANT') {
-        const signature = await burnTokens({
-          connection,
-          tokenMint: data.tokenMint,
-          amount: data.amount,
-          wallet: publicKey,
-          signTransaction,
-          isControlledBurn: false,
-          onProgress: setBurnStatus
-        })
+      // Handle burn based on token type
+      const signature =
+        'isLPToken' in token
+          ? await burnLPTokens({
+              connection,
+              tokenMint: data.tokenMint,
+              amount: data.amount,
+              wallet: publicKey,
+              signTransaction,
+              isControlledBurn: data.burnType === 'CONTROLLED',
+              onProgress: setBurnStatus
+            })
+          : await burnTokens({
+              connection,
+              tokenMint: data.tokenMint,
+              amount: data.amount,
+              wallet: publicKey,
+              signTransaction,
+              isControlledBurn: data.burnType === 'CONTROLLED',
+              onProgress: setBurnStatus
+            })
 
-        // If signature is null, user cancelled the transaction
-        if (!signature) {
-          setIsSubmitting(false)
-          setBurnStatus(null)
-          return
-        }
-
-        setTxSignature(signature)
-
-        // Create burn record in database
-        const response = await fetch('/api/burn', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({
-            tokenMint: data.tokenMint,
-            tokenName: selectedToken.name,
-            tokenSymbol: selectedToken.symbol,
-            amount: data.amount,
-            burnType: data.burnType,
-            message: data.message,
-            userWallet: publicKey.toString()
-          })
-        })
-
-        const result = await response.json()
-        if (!result.success) {
-          throw new Error(result.error || 'Failed to create burn transaction')
-        }
-
-        toast({
-          title: 'Burn successful!',
-          description: `Successfully burned ${data.amount} ${selectedToken.symbol || 'tokens'}`
-        })
-
-        // Reset form
-        form.reset()
-      } else {
-        // For controlled burns
-        const signature = await burnTokens({
-          connection,
-          tokenMint: data.tokenMint,
-          amount: data.amount,
-          wallet: publicKey,
-          signTransaction,
-          isControlledBurn: true,
-          onProgress: setBurnStatus
-        })
-
-        // If signature is null, user cancelled the transaction
-        if (!signature) {
-          setIsSubmitting(false)
-          setBurnStatus(null)
-          return
-        }
-
-        setTxSignature(signature)
-
-        // Create burn record in database
-        const response = await fetch('/api/burn', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({
-            tokenMint: data.tokenMint,
-            tokenName: selectedToken.name,
-            tokenSymbol: selectedToken.symbol,
-            amount: data.amount,
-            burnType: data.burnType,
-            message: data.message,
-            userWallet: publicKey.toString(),
-            scheduledBurns: data.scheduledBurns
-          })
-        })
-
-        const result = await response.json()
-        if (!result.success) {
-          throw new Error(result.error || 'Failed to create burn schedule')
-        }
-
-        toast({
-          title: 'Schedule created!',
-          description: `Successfully created burn schedule for ${data.amount} ${selectedToken.symbol || 'tokens'}`
-        })
-
-        // Reset form
-        form.reset()
+      // If signature is null, user cancelled the transaction
+      if (!signature) {
+        setIsSubmitting(false)
+        setBurnStatus(null)
+        return
       }
+
+      setTxSignature(signature)
+
+      // Create burn record in database
+      const response = await fetch('/api/burn', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          tokenMint: data.tokenMint,
+          tokenName: token.name,
+          tokenSymbol: token.symbol,
+          tokenType: 'isLPToken' in token ? 'LP' : 'REGULAR',
+          // Include LP token specific fields if it's an LP token
+          ...('isLPToken' in token && isLPToken(token) && token.token0 && token.token1
+            ? {
+                lpToken0Mint: token.token0.mint,
+                lpToken1Mint: token.token1.mint,
+                lpToken0Symbol: token.token0.symbol,
+                lpToken1Symbol: token.token1.symbol,
+                lpPoolAddress: token.poolAddress
+              }
+            : {}),
+          amount: data.amount,
+          burnType: data.burnType,
+          message: data.message,
+          userWallet: publicKey.toString(),
+          scheduledBurns: data.scheduledBurns
+        })
+      })
+
+      const result = await response.json()
+      if (!result.success) {
+        throw new Error(result.error || 'Failed to create burn transaction')
+      }
+
+      toast({
+        title: 'Burn successful!',
+        description: `Successfully burned ${data.amount} ${token.symbol}`
+      })
+
+      // Reset form
+      form.reset()
     } catch (err) {
       console.error('Error submitting burn form:', err)
-      // Only show error toast if it wasn't a user cancellation
-      if (err instanceof Error && err.message !== 'USER_CANCELLED') {
-        toast({
-          title: 'Error',
-          description: err instanceof Error ? err.message : 'Failed to process burn transaction',
-          variant: 'destructive'
-        })
-      }
+      toast({
+        title: 'Error',
+        description: err instanceof Error ? err.message : 'Failed to burn tokens',
+        variant: 'destructive'
+      })
     } finally {
       setIsSubmitting(false)
-      if (!txSignature) {
-        setBurnStatus(null) // Clear status if transaction wasn't completed
-      }
     }
   }
 
@@ -251,31 +218,55 @@ export function BurnForm() {
               render={({ field }) => (
                 <FormItem>
                   <FormLabel className='text-[#E6E6E6]'>Token</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
-                    <FormControl>
-                      <SelectTrigger className='border-[#1E1E24] bg-black/20'>
-                        <SelectValue placeholder={isLoading ? 'Loading tokens...' : 'Select a token'}>
-                          {field.value &&
-                            (() => {
-                              const selectedToken = tokens.find(t => t.mint === field.value)
-                              if (!selectedToken) return null
-                              const symbol = selectedToken.symbol?.trim() || selectedToken.mint.slice(0, 8)
-                              const displayText = `${symbol} (${formatTokenAmount(selectedToken.uiAmount, selectedToken.decimals)})`
-                              return displayText
-                            })()}
-                        </SelectValue>
-                      </SelectTrigger>
-                    </FormControl>
+                  <Select
+                    onValueChange={value => {
+                      field.onChange(value)
+                      const token = tokens.find(t => t.mint === value)
+                      setSelectedToken(token || null)
+                    }}
+                    value={field.value}
+                  >
+                    <SelectTrigger className='border-[#1E1E24] bg-black/20'>
+                      <SelectValue placeholder={isLoading ? 'Loading tokens...' : 'Select a token'}>
+                        {field.value &&
+                          (() => {
+                            const selectedToken = tokens.find(t => t.mint === field.value)
+                            if (!selectedToken) return null
+                            const symbol = selectedToken.symbol?.trim() || selectedToken.mint.slice(0, 8)
+                            const displayText = `${symbol} (${formatTokenAmount(selectedToken.uiAmount, selectedToken.decimals)})`
+                            return displayText
+                          })()}
+                      </SelectValue>
+                    </SelectTrigger>
                     <SelectContent className='border-[#1E1E24] bg-[#13141F]'>
                       {tokens.length === 0 && !isLoading && (
                         <div className='p-2 text-sm text-[#A3A3A3]'>No tokens found in wallet</div>
                       )}
                       {tokens.map(token => {
                         const symbol = token.symbol?.trim() || token.mint.slice(0, 8)
-                        const displayText = `${symbol} (${formatTokenAmount(token.uiAmount, token.decimals)})`
+                        let displayText = `${symbol} (${formatTokenAmount(token.uiAmount, token.decimals)})`
+
+                        // Add LP token indicator and pair info if it's an LP token
+                        if (isLPToken(token)) {
+                          const pair =
+                            token.token0 && token.token1 ? `${token.token0.symbol}/${token.token1.symbol}` : 'LP'
+                          displayText = `${pair} LP (${formatTokenAmount(token.uiAmount, token.decimals)})`
+                        }
+
                         return (
-                          <SelectItem key={token.mint} value={token.mint} className='focus:bg-[#1E1E24]'>
-                            {displayText}
+                          <SelectItem
+                            key={token.mint}
+                            value={token.mint}
+                            className='focus:bg-[#1E1E24] flex items-center gap-2'
+                          >
+                            <div className='flex flex-col'>
+                              <span>{displayText}</span>
+                              {isLPToken(token) && (
+                                <span className='text-xs text-[#A3A3A3]'>
+                                  Pool: {token.poolAddress?.slice(0, 8)}...
+                                </span>
+                              )}
+                            </div>
                           </SelectItem>
                         )
                       })}
@@ -285,6 +276,19 @@ export function BurnForm() {
                 </FormItem>
               )}
             />
+
+            {/* Show LP token details if selected */}
+            {selectedToken && isLPToken(selectedToken) && (
+              <div className='rounded-lg border p-4 space-y-2'>
+                <h4 className='font-medium'>LP Token Details</h4>
+                <div className='text-sm text-muted-foreground'>
+                  <p>
+                    Token Pair: {selectedToken.token0?.symbol}/{selectedToken.token1?.symbol}
+                  </p>
+                  <p>Pool: {selectedToken.poolAddress}</p>
+                </div>
+              </div>
+            )}
 
             <FormField
               control={form.control}
@@ -494,4 +498,9 @@ export function BurnForm() {
       </CardContent>
     </Card>
   )
+}
+
+// Type guard for LP tokens
+function isLPToken(token: TokenType): token is LPTokenInfo {
+  return 'isLPToken' in token && token.isLPToken === true
 }

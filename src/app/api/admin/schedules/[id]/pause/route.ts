@@ -7,7 +7,8 @@ export async function POST(request: Request, { params }: { params: { id: string 
     const schedule = await prisma.scheduledBurn.update({
       where: { id: params.id },
       data: {
-        status: BurnStatus.CANCELLED
+        status: BurnStatus.FAILED,
+        errorMessage: 'Cancelled by admin'
       }
     })
 
