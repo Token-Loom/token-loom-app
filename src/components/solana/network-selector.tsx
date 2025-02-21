@@ -4,11 +4,17 @@ import { WalletAdapterNetwork } from '@solana/wallet-adapter-base'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { useState, useEffect } from 'react'
 
-const NETWORKS = [
+interface Network {
+  name: string
+  value: WalletAdapterNetwork
+  endpoint: string
+}
+
+const networks: Network[] = [
   {
-    name: 'Mainnet Beta',
+    name: 'Mainnet',
     value: WalletAdapterNetwork.Mainnet,
-    endpoint: 'https://mainnet.helius-rpc.com/?api-key=c4e8c2b5-7956-4b5b-82d1-35de5c1068ec'
+    endpoint: process.env.NEXT_PUBLIC_RPC_ENDPOINT || 'https://api.mainnet-beta.solana.com'
   }
 ]
 
@@ -32,10 +38,10 @@ export function NetworkSelector() {
   return (
     <Select value={selectedNetwork} onValueChange={handleNetworkChange}>
       <SelectTrigger className='w-[140px]'>
-        <SelectValue>{NETWORKS.find(n => n.value === selectedNetwork)?.name || 'Select Network'}</SelectValue>
+        <SelectValue>{networks.find(n => n.value === selectedNetwork)?.name || 'Select Network'}</SelectValue>
       </SelectTrigger>
       <SelectContent>
-        {NETWORKS.map(network => (
+        {networks.map(network => (
           <SelectItem key={network.value} value={network.value}>
             {network.name}
           </SelectItem>

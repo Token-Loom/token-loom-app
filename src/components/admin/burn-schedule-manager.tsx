@@ -104,9 +104,9 @@ export function BurnScheduleManager() {
       header: 'Status',
       cell: ({ row }) => {
         const variant =
-          row.original.status === 'CONFIRMED'
+          row.original.status === BurnStatus.CONFIRMED
             ? 'default'
-            : row.original.status === 'PENDING'
+            : row.original.status === BurnStatus.PENDING
               ? 'secondary'
               : 'destructive'
         return <Badge variant={variant}>{row.original.status.toLowerCase()}</Badge>
@@ -119,9 +119,9 @@ export function BurnScheduleManager() {
     {
       id: 'actions',
       cell: ({ row }) => {
-        const isPaused = row.original.status === 'CANCELLED'
-        const canRetry = row.original.status === 'FAILED'
-        const isProcessing = row.original.status === 'PROCESSING'
+        const isPaused = row.original.status === BurnStatus.FAILED
+        const canRetry = row.original.status === BurnStatus.FAILED
+        const isProcessing = row.original.status === BurnStatus.PROCESSING
 
         return (
           <div className='flex items-center gap-2'>

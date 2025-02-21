@@ -23,9 +23,9 @@ const burnRequestSchema = z.object({
 })
 
 // Get encryption key from environment variable
-const ENCRYPTION_KEY = process.env.WALLET_ENCRYPTION_KEY
+const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY
 if (!ENCRYPTION_KEY || ENCRYPTION_KEY.length !== 64) {
-  throw new Error('Invalid or missing WALLET_ENCRYPTION_KEY environment variable')
+  throw new Error('Invalid or missing ENCRYPTION_KEY environment variable')
 }
 
 export async function POST(request: Request) {

@@ -17,7 +17,7 @@ export const SolanaWalletProvider: FC<Props> = ({ children }) => {
 
   // You can also provide a custom RPC endpoint
   const endpoint = useMemo(() => {
-    const MAINNET_RPC = 'https://mainnet.helius-rpc.com/?api-key=c4e8c2b5-7956-4b5b-82d1-35de5c1068ec'
+    const MAINNET_RPC = process.env.NEXT_PUBLIC_RPC_ENDPOINT || 'https://api.mainnet-beta.solana.com'
 
     // Use custom RPC if provided
     const customRPC = process.env.NEXT_PUBLIC_RPC_ENDPOINT

@@ -1,8 +1,33 @@
-import type { Metadata } from 'next'
+import type { Metadata, Viewport } from 'next'
+import { Inter, Space_Grotesk, JetBrains_Mono } from 'next/font/google'
 import { RootLayout } from '@/components/layout/root-layout'
 import { SolanaWalletProvider } from '@/lib/solana/wallet-provider'
 import { Toaster } from '@/components/ui/toaster'
 import './globals.css'
+
+const inter = Inter({
+  subsets: ['latin'],
+  display: 'swap',
+  variable: '--font-inter'
+})
+
+const spaceGrotesk = Space_Grotesk({
+  subsets: ['latin'],
+  display: 'swap',
+  variable: '--font-space-grotesk'
+})
+
+const jetbrainsMono = JetBrains_Mono({
+  subsets: ['latin'],
+  display: 'swap',
+  variable: '--font-jetbrains-mono'
+})
+
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 1
+}
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://controlledburn.io'),
@@ -53,11 +78,6 @@ export const metadata: Metadata = {
     creator: '@controlledburn',
     site: '@controlledburn'
   },
-  viewport: {
-    width: 'device-width',
-    initialScale: 1,
-    maximumScale: 1
-  },
   verification: {
     google: 'your-google-site-verification'
   },
@@ -68,7 +88,7 @@ export const metadata: Metadata = {
 
 export default function Layout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang='en' className='dark'>
+    <html lang='en' className={`dark ${inter.variable} ${spaceGrotesk.variable} ${jetbrainsMono.variable}`}>
       <body>
         <SolanaWalletProvider>
           <RootLayout>{children}</RootLayout>

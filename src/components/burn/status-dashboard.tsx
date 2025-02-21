@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { useWallet } from '@solana/wallet-adapter-react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
@@ -65,7 +65,7 @@ export function StatusDashboard() {
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
-  const fetchTransactions = async () => {
+  const fetchTransactions = useCallback(async () => {
     if (!publicKey) return
 
     try {
@@ -85,17 +85,13 @@ export function StatusDashboard() {
     } finally {
       setIsLoading(false)
     }
-  }
+  }, [publicKey])
 
   useEffect(() => {
     fetchTransactions()
-    // Set up polling interval
-    const interval = setInterval(fetchTransactions, 5000) // Poll every 5 seconds
-
-    return () => {
-      clearInterval(interval)
-    }
-  }, [publicKey])
+    const interval = setInterval(fetchTransactions, 5000)
+    return () => clearInterval(interval)
+  }, [fetchTransactions])
 
   const getStatusBadge = (status: string) => {
     switch (status) {

@@ -116,6 +116,8 @@ If needed, you can further use the `web_scraper.py` file to scrape the web page 
 - Handle loading states in UI components to provide better user feedback
 - Keep system configuration in a database for persistence across restarts
 - Use upsert instead of update with create option to avoid type errors with Prisma
+- In Next.js App Router route handlers, params must be typed as a Promise: `{ params: Promise<{ [param]: string }> }`
+- The "bigint: Failed to load bindings" warning from @solana/web3.js is non-critical and the package falls back to pure JavaScript implementation automatically
 
 # Scratchpad
 
