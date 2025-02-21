@@ -4,7 +4,7 @@ import { useConnection } from '@solana/wallet-adapter-react'
 import { useWallet } from '@solana/wallet-adapter-react'
 import { useState, useCallback, useEffect } from 'react'
 import { PublicKey } from '@solana/web3.js'
-import { getTokenMetadata } from '@/lib/utils/token-metadata'
+import { getTokenMetadata } from '@/lib/solana/token-metadata'
 import { TokenInfo } from '@/types'
 
 export function useTokenBalances() {
@@ -47,7 +47,7 @@ export function useTokenBalances() {
             decimals: parsedInfo.tokenAmount.decimals,
             uiAmount: Number(parsedInfo.tokenAmount.uiAmount)
           }
-        } catch (err) {
+        } catch {
           // If metadata fetch fails, return token with minimal info
           return {
             mint: parsedInfo.mint,

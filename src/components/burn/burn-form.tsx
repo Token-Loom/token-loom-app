@@ -254,18 +254,31 @@ export function BurnForm() {
                   <Select onValueChange={field.onChange} defaultValue={field.value}>
                     <FormControl>
                       <SelectTrigger className='border-[#1E1E24] bg-black/20'>
-                        <SelectValue placeholder={isLoading ? 'Loading tokens...' : 'Select a token'} />
+                        <SelectValue placeholder={isLoading ? 'Loading tokens...' : 'Select a token'}>
+                          {field.value &&
+                            (() => {
+                              const selectedToken = tokens.find(t => t.mint === field.value)
+                              if (!selectedToken) return null
+                              const symbol = selectedToken.symbol?.trim() || selectedToken.mint.slice(0, 8)
+                              const displayText = `${symbol} (${formatTokenAmount(selectedToken.uiAmount, selectedToken.decimals)})`
+                              return displayText
+                            })()}
+                        </SelectValue>
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent className='border-[#1E1E24] bg-[#13141F]'>
                       {tokens.length === 0 && !isLoading && (
                         <div className='p-2 text-sm text-[#A3A3A3]'>No tokens found in wallet</div>
                       )}
-                      {tokens.map(token => (
-                        <SelectItem key={token.mint} value={token.mint} className='focus:bg-[#1E1E24]'>
-                          {token.symbol || token.mint} ({formatTokenAmount(token.uiAmount, token.decimals)})
-                        </SelectItem>
-                      ))}
+                      {tokens.map(token => {
+                        const symbol = token.symbol?.trim() || token.mint.slice(0, 8)
+                        const displayText = `${symbol} (${formatTokenAmount(token.uiAmount, token.decimals)})`
+                        return (
+                          <SelectItem key={token.mint} value={token.mint} className='focus:bg-[#1E1E24]'>
+                            {displayText}
+                          </SelectItem>
+                        )
+                      })}
                     </SelectContent>
                   </Select>
                   <FormMessage className='text-red-500' />
