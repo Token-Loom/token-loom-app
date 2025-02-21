@@ -47,7 +47,7 @@ export function ManualControls() {
   const fetchSystemStatus = async () => {
     setIsStatusLoading(true)
     try {
-      const response = await fetch('/api/admin/system/toggle')
+      const response = await fetch('/api/admin/status')
       if (response.ok) {
         const data = await response.json()
         setStatus(prev => ({ ...prev, isRunning: data.isRunning }))
@@ -69,10 +69,12 @@ export function ManualControls() {
       })
 
       const data = await response.json()
+
       if (response.ok) {
         setStatus(prev => ({ ...prev, isRunning: data.isRunning }))
         toast.success(`System ${data.isRunning ? 'resumed' : 'paused'} successfully`)
       } else {
+        console.error('Toggle request failed:', data.error)
         toast.error(data.error || 'Failed to toggle system')
       }
     } catch (error) {

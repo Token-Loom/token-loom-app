@@ -5,6 +5,7 @@ import { useWallet } from '@solana/wallet-adapter-react'
 import { BurnScheduleManager } from '@/components/admin/burn-schedule-manager'
 import { ManualControls } from '@/components/admin/manual-controls'
 import { MonitoringDashboard } from '@/components/admin/monitoring-dashboard'
+import { ProfitDashboard } from '@/components/admin/profit-dashboard'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { useRouter } from 'next/navigation'
 import { useEffect } from 'react'
@@ -54,6 +55,9 @@ export default function AdminPage() {
               <TabsTrigger value='monitoring' className='data-[state=active]:bg-[#2E2E34]'>
                 System Status
               </TabsTrigger>
+              <TabsTrigger value='profit' className='data-[state=active]:bg-[#2E2E34]'>
+                Profit
+              </TabsTrigger>
               <TabsTrigger value='schedules' className='data-[state=active]:bg-[#2E2E34]'>
                 Burn Schedules
               </TabsTrigger>
@@ -64,6 +68,10 @@ export default function AdminPage() {
 
             <TabsContent value='monitoring' className='space-y-4'>
               <MonitoringDashboard />
+            </TabsContent>
+
+            <TabsContent value='profit' className='space-y-4'>
+              <ProfitDashboard />
             </TabsContent>
 
             <TabsContent value='schedules' className='space-y-4'>

@@ -136,6 +136,8 @@ model GlobalStatistic {
   totalTransactions    Int      @default(0)
   uniqueTokensBurned   Int      @default(0)
   totalFeesCollected   Decimal  @default(0)
+  totalGasCosts        Decimal  @default(0)
+  netProfit            Decimal  @default(0)
   instantBurnsCount    Int      @default(0)
   controlledBurnsCount Int      @default(0)
   lastUpdated          DateTime @updatedAt

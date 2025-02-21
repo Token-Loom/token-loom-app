@@ -36,37 +36,42 @@ export function BurnStatistics() {
   }, [])
 
   return (
-    <section className='py-16'>
-      <div className='container'>
-        <div className='text-center mb-16'>
-          <h2 className='font-display mb-4 text-3xl font-bold text-[#E6E6E6] sm:text-4xl'>Real-Time Burn Statistics</h2>
-          <p className='mx-auto max-w-2xl text-[#A3A3A3]'>
-            Track the impact of token burning across the Solana ecosystem. Our platform has helped projects effectively
-            manage their token supply.
-          </p>
-        </div>
+    <section className='relative bg-[#13141F] py-[140px]'>
+      <div className='absolute inset-0 bg-[linear-gradient(to_right,_#9945FF08_1px,transparent_1px),linear-gradient(to_bottom,_#9945FF08_1px,transparent_1px)] bg-[size:24px_24px]' />
+      <div className='container relative'>
+        <div className='mx-auto max-w-6xl'>
+          <div className='text-center mb-16'>
+            <h2 className='font-display mb-4 text-3xl font-bold text-[#E6E6E6] sm:text-4xl'>
+              Real-Time Burn Statistics
+            </h2>
+            <p className='mx-auto max-w-2xl text-[#A3A3A3]'>
+              Track the impact of token burning across the Solana ecosystem. Our platform has helped projects
+              effectively manage their token supply.
+            </p>
+          </div>
 
-        <div className='grid gap-6 sm:grid-cols-2 lg:grid-cols-4'>
-          <StatCard
-            title='Total Burned'
-            value={loading ? null : `${formatNumber(stats?.totalBurned || 0)} SOL`}
-            cardGradient='from-[#9945FF]/5 via-transparent to-transparent'
-          />
-          <StatCard
-            title='Transactions'
-            value={loading ? null : formatNumber(stats?.totalTransactions || 0)}
-            cardGradient='from-[#14F195]/5 via-transparent to-transparent'
-          />
-          <StatCard
-            title='Unique Tokens'
-            value={loading ? null : formatNumber(stats?.uniqueTokens || 0)}
-            cardGradient='from-[#00C2FF]/5 via-transparent to-transparent'
-          />
-          <StatCard
-            title='Total Value'
-            value={loading ? null : `$${formatNumber(stats?.totalValue || 0)}`}
-            cardGradient='from-[#9945FF]/5 via-transparent to-transparent'
-          />
+          <div className='grid gap-6 sm:grid-cols-2 lg:grid-cols-4'>
+            <StatCard
+              title='Total Burned'
+              value={loading ? null : `${formatNumber(stats?.totalBurned || 0)} SOL`}
+              cardGradient='from-[#9945FF]/5 via-transparent to-transparent'
+            />
+            <StatCard
+              title='Transactions'
+              value={loading ? null : formatNumber(stats?.totalTransactions || 0)}
+              cardGradient='from-[#14F195]/5 via-transparent to-transparent'
+            />
+            <StatCard
+              title='Unique Tokens'
+              value={loading ? null : formatNumber(stats?.uniqueTokens || 0)}
+              cardGradient='from-[#00C2FF]/5 via-transparent to-transparent'
+            />
+            <StatCard
+              title='Total Value'
+              value={loading ? null : `$${formatNumber(stats?.totalValue || 0)}`}
+              cardGradient='from-[#9945FF]/5 via-transparent to-transparent'
+            />
+          </div>
         </div>
       </div>
     </section>

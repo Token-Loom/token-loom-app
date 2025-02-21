@@ -1,9 +1,6 @@
-import { type ClassValue, clsx } from 'clsx'
-import { twMerge } from 'tailwind-merge'
+import { cn } from './theme'
 
-export function cn(...inputs: ClassValue[]) {
-  return twMerge(clsx(inputs))
-}
+export { cn }
 
 export function truncateAddress(address: string, startLength = 4, endLength = 4): string {
   if (!address) return ''
@@ -34,11 +31,69 @@ export function formatTokenAmount(amount: number, decimals: number = 9): string 
   return formattedInteger
 }
 
-export function formatNumber(value: number): string {
-  if (value >= 1_000_000) {
-    return `${(value / 1_000_000).toFixed(1)}M`
-  } else if (value >= 1_000) {
-    return `${(value / 1_000).toFixed(1)}K`
+export function formatNumber(value: number, options?: Intl.NumberFormatOptions): string {
+  const defaultOptions: Intl.NumberFormatOptions = {
+    notation: 'compact',
+    maximumFractionDigits: 1
   }
-  return value.toString()
+
+  return new Intl.NumberFormat('en-US', { ...defaultOptions, ...options }).format(value)
+}
+
+export function formatDate(date: Date): string {
+  return new Intl.DateTimeFormat('en-US', {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+    timeZoneName: 'short'
+  }).format(date)
+}
+
+export function formatDuration(ms: number): string {
+  const seconds = Math.floor(ms / 1000)
+  const minutes = Math.floor(seconds / 60)
+  const hours = Math.floor(minutes / 60)
+  const days = Math.floor(hours / 24)
+
+  if (days > 0) return `${days}d ${hours % 24}h`
+  if (hours > 0) return `${hours}h ${minutes % 60}m`
+  if (minutes > 0) return `${minutes}m ${seconds % 60}s`
+  return `${seconds}s`
+}
+
+export function debounce<T extends (...args: unknown[]) => void>(
+  func: T,
+  wait: number
+): (...args: Parameters<T>) => void {
+  let timeout: NodeJS.Timeout
+
+  return function executedFunction(...args: Parameters<T>) {
+    const later = () => {
+      clearTimeout(timeout)
+      func(...args)
+    }
+
+    clearTimeout(timeout)
+    timeout = setTimeout(later, wait)
+  }
+}
+
+export function throttle<T extends (...args: unknown[]) => ReturnType<T>>(
+  func: T,
+  limit: number
+): (...args: Parameters<T>) => ReturnType<T> {
+  let inThrottle = false
+  let lastResult: ReturnType<T>
+
+  return function executedFunction(...args: Parameters<T>): ReturnType<T> {
+    if (!inThrottle) {
+      lastResult = func(...args)
+      inThrottle = true
+      setTimeout(() => (inThrottle = false), limit)
+    }
+
+    return lastResult
+  }
 }

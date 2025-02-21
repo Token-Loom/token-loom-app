@@ -134,8 +134,22 @@ export class BurnScheduler {
         tokenMint: burn.transaction.tokenMint,
         amount: burn.amount.toString(),
         wallet: burnWallet.publicKey,
+        signTransaction: async tx => {
+          tx.sign(burnWallet)
+          return tx
+        },
         onProgress: status => console.log(`Burn progress: ${status}`)
       })
+
+      if (!signature) {
+        throw new Error('Failed to get transaction signature')
+      }
+
+      // Get transaction gas cost
+      const txInfo = await this.connection.getTransaction(signature, {
+        maxSupportedTransactionVersion: 0
+      })
+      const gasUsed = txInfo?.meta?.fee || 0
 
       // Update execution record
       await prisma.burnExecution.update({
@@ -143,7 +157,8 @@ export class BurnScheduler {
         data: {
           status: ExecutionStatus.COMPLETED,
           txSignature: signature,
-          completedAt: new Date()
+          completedAt: new Date(),
+          gasUsed: gasUsed
         }
       })
 

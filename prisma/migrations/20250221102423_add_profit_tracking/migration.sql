@@ -1,0 +1,3 @@
+-- AlterTable
+ALTER TABLE "GlobalStatistic" ADD COLUMN     "netProfit" DECIMAL(65,30) NOT NULL DEFAULT 0,
+ADD COLUMN     "totalGasCosts" DECIMAL(65,30) NOT NULL DEFAULT 0;

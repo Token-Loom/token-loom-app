@@ -5,7 +5,7 @@ import { BurnStatus } from '@prisma/client'
 export async function POST() {
   try {
     // Update statistics
-    const [totalBurned, uniqueTokens, totalFees] = await Promise.all([
+    const [totalBurned, uniqueTokens, totalFees, totalGasCosts] = await Promise.all([
       prisma.burnTransaction.count({
         where: { status: BurnStatus.CONFIRMED }
       }),
@@ -20,8 +20,17 @@ export async function POST() {
           where: { status: BurnStatus.CONFIRMED },
           _sum: { feeAmount: true }
         })
-        .then(result => result._sum.feeAmount || 0)
+        .then(result => result._sum.feeAmount || 0),
+      prisma.burnExecution
+        .aggregate({
+          where: { status: 'COMPLETED' },
+          _sum: { gasUsed: true }
+        })
+        .then(result => result._sum.gasUsed || 0)
     ])
+
+    // Calculate net profit
+    const netProfit = Number(totalFees) - Number(totalGasCosts)
 
     // Update global statistics
     await prisma.globalStatistic.upsert({
@@ -30,6 +39,8 @@ export async function POST() {
         totalTokensBurned: totalBurned,
         uniqueTokensBurned: uniqueTokens,
         totalFeesCollected: totalFees,
+        totalGasCosts: totalGasCosts,
+        netProfit: netProfit,
         lastUpdated: new Date()
       },
       create: {
@@ -37,6 +48,8 @@ export async function POST() {
         totalTokensBurned: totalBurned,
         uniqueTokensBurned: uniqueTokens,
         totalFeesCollected: totalFees,
+        totalGasCosts: totalGasCosts,
+        netProfit: netProfit,
         lastUpdated: new Date(),
         instantBurnsCount: 0,
         controlledBurnsCount: 0

@@ -18,14 +18,12 @@ export function NetworkSelector() {
   useEffect(() => {
     const savedNetwork = localStorage.getItem('network')
     if (savedNetwork) {
-      console.log('Loading saved network:', savedNetwork)
       setSelectedNetwork(savedNetwork)
     }
   }, [])
 
   const handleNetworkChange = (network: string) => {
     if (network !== selectedNetwork) {
-      console.log('Switching network to:', network)
       localStorage.setItem('network', network)
       window.location.reload()
     }

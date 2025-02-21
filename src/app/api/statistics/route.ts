@@ -15,7 +15,10 @@ export async function GET() {
         totalBurned: globalStats?.totalTokensBurned || 0,
         totalTransactions: globalStats?.totalTransactions || 0,
         uniqueTokens: globalStats?.uniqueTokensBurned || 0,
-        totalValue: globalStats?.totalFeesCollected || 0
+        totalFeesCollected: globalStats?.totalFeesCollected || 0,
+        totalGasCosts: globalStats?.totalGasCosts || 0,
+        netProfit: globalStats?.netProfit || 0,
+        lastUpdated: globalStats?.lastUpdated || new Date()
       }
     })
   } catch (error) {

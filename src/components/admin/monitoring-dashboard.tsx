@@ -14,6 +14,7 @@ interface SystemStatus {
   pendingTransactions: number
   failedTransactions: number
   systemLoad: number
+  isRunning: boolean
   lastUpdated: Date
 }
 
@@ -67,6 +68,7 @@ export function MonitoringDashboard() {
     pendingTransactions: 0,
     failedTransactions: 0,
     systemLoad: 0,
+    isRunning: true,
     lastUpdated: new Date()
   })
   const [executions, setExecutions] = useState<BurnExecution[]>([])
@@ -100,6 +102,19 @@ export function MonitoringDashboard() {
       <div className='grid gap-4 md:grid-cols-2 lg:grid-cols-4'>
         <Card className='bg-[#1E1E24] border-[#2E2E34]'>
           <CardHeader>
+            <CardTitle className='text-[#E6E6E6]'>System Status</CardTitle>
+            <CardDescription>Current system state</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className='flex items-center gap-2'>
+              <div className={`h-3 w-3 rounded-full ${systemStatus.isRunning ? 'bg-[#14F195]' : 'bg-[#FF8F00]'}`} />
+              <div className='text-2xl font-bold text-[#E6E6E6]'>{systemStatus.isRunning ? 'Running' : 'Paused'}</div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className='bg-[#1E1E24] border-[#2E2E34]'>
+          <CardHeader>
             <CardTitle className='text-[#E6E6E6]'>Active Workers</CardTitle>
             <CardDescription>Currently running burn workers</CardDescription>
           </CardHeader>
@@ -125,16 +140,6 @@ export function MonitoringDashboard() {
           </CardHeader>
           <CardContent>
             <div className='text-2xl font-bold text-[#FF8F00]'>{systemStatus.failedTransactions}</div>
-          </CardContent>
-        </Card>
-
-        <Card className='bg-[#1E1E24] border-[#2E2E34]'>
-          <CardHeader>
-            <CardTitle className='text-[#E6E6E6]'>System Load</CardTitle>
-            <CardDescription>Current system utilization</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className='text-2xl font-bold text-[#9945FF]'>{Math.round(systemStatus.systemLoad * 100)}%</div>
           </CardContent>
         </Card>
       </div>
