@@ -3,8 +3,13 @@
 import { useWallet } from '@solana/wallet-adapter-react'
 import { useWalletModal } from '@solana/wallet-adapter-react-ui'
 import { Button } from '@/components/ui/button'
+import { cn } from '@/lib/utils'
 
-export function WalletButton() {
+interface WalletButtonProps {
+  className?: string
+}
+
+export function WalletButton({ className }: WalletButtonProps) {
   const { publicKey, disconnect } = useWallet()
   const { setVisible } = useWalletModal()
 
@@ -19,7 +24,10 @@ export function WalletButton() {
   return (
     <Button
       variant='outline'
-      className='border-[#9945FF] bg-transparent text-[#9945FF] hover:bg-[#9945FF] hover:text-[#E6E6E6]'
+      className={cn(
+        'border-[#9945FF] bg-transparent text-[#9945FF] hover:bg-[#9945FF] hover:text-[#E6E6E6]',
+        className
+      )}
       onClick={handleClick}
     >
       {publicKey ? `${publicKey.toString().slice(0, 4)}...${publicKey.toString().slice(-4)}` : 'Connect Wallet'}

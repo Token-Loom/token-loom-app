@@ -35,26 +35,28 @@ const faqs = [
 
 export function FAQ() {
   return (
-    <section className='relative bg-[#13141F] py-24'>
+    <section className='relative bg-[#13141F] py-12 sm:py-24'>
       <div className='absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-[#00C2FF]/10 via-[#14F195]/5 to-transparent opacity-30' />
       <div className='absolute inset-0 bg-[linear-gradient(to_right,_#9945FF08_1px,transparent_1px),linear-gradient(to_bottom,_#9945FF08_1px,transparent_1px)] bg-[size:24px_24px]' />
-      <div className='container relative'>
+      <div className='container relative px-4 sm:px-6'>
         <div className='mx-auto max-w-6xl'>
           <div className='text-center'>
-            <h2 className='font-display mb-4 text-3xl font-bold text-[#E6E6E6] sm:text-4xl'>
+            <h2 className='font-display mb-3 sm:mb-4 text-2xl sm:text-3xl font-bold text-[#E6E6E6] md:text-4xl'>
               Frequently Asked Questions
             </h2>
-            <p className='mx-auto max-w-2xl text-[#A3A3A3]'>
+            <p className='mx-auto max-w-2xl text-sm sm:text-base text-[#A3A3A3]'>
               Common questions about our token burning platform and how it works.
             </p>
           </div>
 
-          <div className='mx-auto mt-16 max-w-3xl'>
-            <Accordion type='single' collapsible className='w-full'>
+          <div className='mx-auto mt-8 sm:mt-16 max-w-3xl'>
+            <Accordion type='single' collapsible className='w-full space-y-2 sm:space-y-4'>
               {faqs.map((faq, index) => (
-                <AccordionItem key={index} value={`item-${index}`}>
-                  <AccordionTrigger className='text-left text-[#E6E6E6]'>{faq.question}</AccordionTrigger>
-                  <AccordionContent className='text-[#A3A3A3]'>{faq.answer}</AccordionContent>
+                <AccordionItem key={index} value={`item-${index}`} className='border-[#1E1E24]'>
+                  <AccordionTrigger className='text-left text-sm sm:text-base text-[#E6E6E6] px-2 sm:px-4'>
+                    {faq.question}
+                  </AccordionTrigger>
+                  <AccordionContent className='text-sm text-[#A3A3A3] px-2 sm:px-4'>{faq.answer}</AccordionContent>
                 </AccordionItem>
               ))}
             </Accordion>
