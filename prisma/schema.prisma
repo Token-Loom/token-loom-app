@@ -1,0 +1,190 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Optional user model for registered users
+model User {
+  id               String            @id @default(uuid())
+  walletAddress    String            @unique
+  email            String?           @unique
+  notifyOnStart    Boolean           @default(true)
+  notifyOnComplete Boolean           @default(true)
+  notifyOnFailure  Boolean           @default(true)
+  createdAt        DateTime          @default(now())
+  lastActive       DateTime          @updatedAt
+  transactions     BurnTransaction[]
+  notifications    Notification[]
+}
+
+// System configuration
+model SystemConfig {
+  id          String   @id @default(uuid())
+  maxRetries  Int      @default(3)
+  retryDelay  Int      @default(300) // in seconds
+  maxWorkers  Int      @default(10)
+  isRunning   Boolean  @default(true)
+  lastUpdated DateTime @updatedAt
+}
+
+// Burn wallets for token burning
+model BurnWallet {
+  id            String            @id @default(uuid())
+  walletAddress String            @unique
+  privateKey    String // Note: This should be encrypted in production
+  createdAt     DateTime          @default(now())
+  isActive      Boolean           @default(true)
+  transactions  BurnTransaction[]
+}
+
+// Individual burn transactions
+model BurnTransaction {
+  id             String          @id @default(uuid())
+  userWallet     String?
+  user           User?           @relation(fields: [userWallet], references: [walletAddress])
+  tokenMint      String
+  tokenName      String
+  tokenSymbol    String
+  amount         Decimal // Total amount to be burned
+  burnWalletId   String
+  burnWallet     BurnWallet      @relation(fields: [burnWalletId], references: [id])
+  txSignature    String          @unique
+  status         BurnStatus
+  burnType       BurnType
+  feeAmount      Decimal
+  burnMessage    String?
+  createdAt      DateTime        @default(now())
+  confirmedAt    DateTime?
+  scheduledBurns ScheduledBurn[]
+  executions     BurnExecution[]
+  notifications  Notification[]
+}
+
+// Individual scheduled burns
+model ScheduledBurn {
+  id            String          @id @default(uuid())
+  transactionId String
+  transaction   BurnTransaction @relation(fields: [transactionId], references: [id])
+  scheduledFor  DateTime // Date and time of the burn
+  amount        Decimal // Amount to burn at this time
+  status        BurnStatus      @default(PENDING)
+  executedAt    DateTime? // When the burn was actually executed
+  createdAt     DateTime        @default(now())
+  retryCount    Int             @default(0)
+  nextRetryAt   DateTime?
+  errorMessage  String?
+  executions    BurnExecution[]
+}
+
+// Execution history for burns
+model BurnExecution {
+  id              String          @id @default(uuid())
+  transactionId   String
+  transaction     BurnTransaction @relation(fields: [transactionId], references: [id])
+  scheduledBurnId String?
+  scheduledBurn   ScheduledBurn?  @relation(fields: [scheduledBurnId], references: [id])
+  status          ExecutionStatus
+  txSignature     String?
+  errorMessage    String?
+  startedAt       DateTime        @default(now())
+  completedAt     DateTime?
+  gasUsed         Decimal?
+  retryCount      Int             @default(0)
+}
+
+// Notifications for burn events
+model Notification {
+  id            String           @id @default(uuid())
+  userId        String
+  user          User             @relation(fields: [userId], references: [id])
+  transactionId String
+  transaction   BurnTransaction  @relation(fields: [transactionId], references: [id])
+  type          NotificationType
+  message       String
+  createdAt     DateTime         @default(now())
+  sentAt        DateTime?
+  error         String?
+}
+
+// Statistics for each token
+model BurnStatistic {
+  id                 String   @id @default(uuid())
+  tokenMint          String   @unique
+  tokenSymbol        String
+  totalBurned        Decimal
+  totalTransactions  Int      @default(0)
+  instantBurns       Int      @default(0)
+  controlledBurns    Int      @default(0)
+  totalFeesCollected Decimal  @default(0)
+  lastUpdated        DateTime @updatedAt
+}
+
+// Global statistics
+model GlobalStatistic {
+  id                   String   @id @default(uuid())
+  totalTokensBurned    Int      @default(0)
+  totalTransactions    Int      @default(0)
+  uniqueTokensBurned   Int      @default(0)
+  totalFeesCollected   Decimal  @default(0)
+  instantBurnsCount    Int      @default(0)
+  controlledBurnsCount Int      @default(0)
+  lastUpdated          DateTime @updatedAt
+}
+
+// Token metrics for analytics
+model TokenMetric {
+  id                String   @id @default(uuid())
+  tokenMint         String   @unique
+  tokenSymbol       String
+  tokenName         String
+  dailyBurnAmount   Decimal  @default(0)
+  weeklyBurnAmount  Decimal  @default(0)
+  monthlyBurnAmount Decimal  @default(0)
+  lastUpdated       DateTime @updatedAt
+}
+
+enum BurnStatus {
+  PENDING
+  PROCESSING
+  CONFIRMED
+  FAILED
+  CANCELLED
+  SCHEDULED
+  RETRYING
+}
+
+enum ExecutionStatus {
+  STARTED
+  COMPLETED
+  FAILED
+  RETRYING
+}
+
+enum NotificationType {
+  BURN_SCHEDULED
+  BURN_STARTED
+  BURN_COMPLETED
+  BURN_FAILED
+  RETRY_SCHEDULED
+}
+
+enum BurnType {
+  INSTANT
+  CONTROLLED
+}
+
+enum BurnRate {
+  DAILY
+  WEEKLY
+  MONTHLY
+}
