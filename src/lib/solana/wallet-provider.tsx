@@ -13,24 +13,20 @@ interface Props {
 }
 
 export const SolanaWalletProvider: FC<Props> = ({ children }) => {
-  // Get network from localStorage or use mainnet
-
-  // You can also provide a custom RPC endpoint
+  // Set up RPC endpoint
   const endpoint = useMemo(() => {
-    const MAINNET_RPC = process.env.NEXT_PUBLIC_RPC_ENDPOINT || 'https://api.mainnet-beta.solana.com'
-
-    // Use custom RPC if provided
-    const customRPC = process.env.NEXT_PUBLIC_RPC_ENDPOINT
-    if (customRPC) {
-      console.log('Using custom RPC:', customRPC)
-      return customRPC
-    }
-
-    console.log('Using Helius RPC for mainnet')
-    return MAINNET_RPC
+    // Use custom RPC if provided, otherwise fallback to public endpoint
+    return process.env.NEXT_PUBLIC_RPC_ENDPOINT || 'https://api.mainnet-beta.solana.com'
   }, [])
 
-  const wallets = useMemo(() => [new PhantomWalletAdapter(), new SolflareWalletAdapter()], [])
+  // Initialize supported wallets
+  const wallets = useMemo(
+    () => [
+      new PhantomWalletAdapter(),
+      new SolflareWalletAdapter()
+    ],
+    []
+  )
 
   return (
     <ConnectionProvider endpoint={endpoint}>
