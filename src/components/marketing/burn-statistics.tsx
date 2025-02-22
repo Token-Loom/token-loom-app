@@ -6,17 +6,20 @@ import { useEffect, useState } from 'react'
 import { formatNumber } from '@/lib/utils'
 import { motion } from 'framer-motion'
 import { useInView } from 'react-intersection-observer'
+import { Alert, AlertDescription } from '@/components/ui/alert'
 
 interface BurnStats {
-  totalBurned: number
+  totalBurned: number // Now represents SOL value of burned tokens
   totalTransactions: number
   uniqueTokens: number
   totalValue: number
+  lastUpdated: Date
 }
 
 export function BurnStatistics() {
   const [stats, setStats] = useState<BurnStats | null>(null)
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
   const [ref, inView] = useInView({
     triggerOnce: true,
     threshold: 0.1
@@ -25,11 +28,18 @@ export function BurnStatistics() {
   useEffect(() => {
     const fetchStats = async () => {
       try {
+        setError(null)
         const response = await fetch('/api/statistics')
-        const { data } = await response.json()
-        setStats(data)
+        const result = await response.json()
+
+        if (!result.success) {
+          throw new Error(result.error || 'Failed to fetch statistics')
+        }
+
+        setStats(result.data)
       } catch (error) {
         console.error('Error fetching burn statistics:', error)
+        setError('Failed to load statistics. Please try again later.')
       } finally {
         setLoading(false)
       }
@@ -61,36 +71,42 @@ export function BurnStatistics() {
             </p>
           </div>
 
-          <div className='grid gap-4 sm:gap-6 grid-cols-2 sm:grid-cols-2 lg:grid-cols-4'>
-            <StatCard
-              title='Total Burned'
-              value={loading ? null : `${formatNumber(stats?.totalBurned || 0)} SOL`}
-              color='#9945FF'
-              delay={0.1}
-              inView={inView}
-            />
-            <StatCard
-              title='Transactions'
-              value={loading ? null : formatNumber(stats?.totalTransactions || 0)}
-              color='#14F195'
-              delay={0.2}
-              inView={inView}
-            />
-            <StatCard
-              title='Unique Tokens'
-              value={loading ? null : formatNumber(stats?.uniqueTokens || 0)}
-              color='#00C2FF'
-              delay={0.3}
-              inView={inView}
-            />
-            <StatCard
-              title='Total Value'
-              value={loading ? null : `$${formatNumber(stats?.totalValue || 0)}`}
-              color='#9945FF'
-              delay={0.4}
-              inView={inView}
-            />
-          </div>
+          {error ? (
+            <Alert variant='destructive' className='mb-6'>
+              <AlertDescription>{error}</AlertDescription>
+            </Alert>
+          ) : (
+            <div className='grid gap-4 sm:gap-6 grid-cols-2 sm:grid-cols-2 lg:grid-cols-4'>
+              <StatCard
+                title='Total Burned (SOL)'
+                value={loading ? null : `${formatNumber(stats?.totalBurned || 0)} SOL`}
+                color='#9945FF'
+                delay={0.1}
+                inView={inView}
+              />
+              <StatCard
+                title='Transactions'
+                value={loading ? null : formatNumber(stats?.totalTransactions || 0)}
+                color='#14F195'
+                delay={0.2}
+                inView={inView}
+              />
+              <StatCard
+                title='Unique Tokens'
+                value={loading ? null : formatNumber(stats?.uniqueTokens || 0)}
+                color='#00C2FF'
+                delay={0.3}
+                inView={inView}
+              />
+              <StatCard
+                title='Total Value'
+                value={loading ? null : `$${formatNumber(stats?.totalValue || 0)}`}
+                color='#9945FF'
+                delay={0.4}
+                inView={inView}
+              />
+            </div>
+          )}
         </motion.div>
       </div>
     </section>
