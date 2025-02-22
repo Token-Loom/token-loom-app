@@ -80,44 +80,16 @@ export const getPhantomProvider = (): PhantomProvider['solana'] | null => {
 export const connectPhantomMobile = () => {
   if (typeof window === 'undefined') return
 
-  // Generate a new keypair for this connection
-  const dappKeyPair = nacl.box.keyPair()
-
-  // Save keypair to local storage for retrieving after redirect
-  localStorage.setItem(
-    'phantom_keypair',
-    JSON.stringify({
-      publicKey: Buffer.from(dappKeyPair.publicKey).toString('hex'),
-      secretKey: Buffer.from(dappKeyPair.secretKey).toString('hex')
-    })
-  )
-
-  // For mobile web browser flow, we need to encode the entire URL
-  const currentUrl = window.location.href
-  const encodedUrl = encodeURIComponent(currentUrl)
-
-  // Construct URL exactly as shown in documentation
+  // For mobile web browser, use a simpler direct connection URL
   const params = new URLSearchParams({
-    dapp_encryption_public_key: bs58.encode(dappKeyPair.publicKey),
-    redirect_link: currentUrl,
     app_url: window.location.origin,
+    redirect_link: window.location.href,
     cluster: 'mainnet-beta'
   })
 
-  // For mobile web browser, we need to use a special format
+  // Direct connection URL for mobile
   const phantomUrl = `https://phantom.app/ul/v1/connect?${params.toString()}`
-
-  // Check if we're already in the Phantom in-app browser
-  const isPhantomInAppBrowser = window.navigator.userAgent.includes('PhantomBrowser')
-
-  if (isPhantomInAppBrowser) {
-    // If we're in Phantom's browser, redirect directly back to the app
-    window.location.href = currentUrl
-  } else {
-    // If we're in the regular browser, use the deep link
-    const deepLink = `https://phantom.app/ul/browse/${encodedUrl}?ref=${encodeURIComponent(phantomUrl)}`
-    window.location.href = deepLink
-  }
+  window.location.href = phantomUrl
 }
 
 interface PhantomResponseData {

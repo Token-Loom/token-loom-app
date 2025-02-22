@@ -5,23 +5,10 @@ import { useWalletModal } from '@solana/wallet-adapter-react-ui'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import { useEffect, useState, useCallback } from 'react'
-import { PublicKey } from '@solana/web3.js'
-import {
-  checkForPhantom,
-  isMobileDevice,
-  connectPhantomMobile,
-  handlePhantomResponse,
-  getPhantomProvider
-} from '@/lib/solana/phantom-deeplink'
+import { checkForPhantom, isMobileDevice, connectPhantomMobile } from '@/lib/solana/phantom-deeplink'
 
 interface WalletButtonProps {
   className?: string
-}
-
-interface PhantomAdapter {
-  publicKey: PublicKey | null
-  connected: boolean
-  name: string
 }
 
 export function WalletButton({ className }: WalletButtonProps) {
@@ -29,13 +16,11 @@ export function WalletButton({ className }: WalletButtonProps) {
   const { setVisible } = useWalletModal()
   const [isPhantomAvailable, setIsPhantomAvailable] = useState(false)
   const [isMobile, setIsMobile] = useState(false)
-  const [isPhantomBrowser, setIsPhantomBrowser] = useState(false)
 
   useEffect(() => {
     const checkPhantom = () => {
       const isAvailable = checkForPhantom()
       setIsPhantomAvailable(isAvailable)
-      setIsPhantomBrowser(window.navigator.userAgent.includes('PhantomBrowser'))
     }
 
     setIsMobile(isMobileDevice())
@@ -57,68 +42,25 @@ export function WalletButton({ className }: WalletButtonProps) {
   useEffect(() => {
     if (typeof window === 'undefined') return
 
-    const url = window.location.href
+    // Handle connection response
+    const searchParams = new URLSearchParams(window.location.search)
+    const phantomPublicKey = searchParams.get('phantom_public_key')
 
-    if (url.includes('phantom_encryption_public_key')) {
-      const response = handlePhantomResponse(url)
+    if (phantomPublicKey) {
+      // Clean up URL
+      const currentUrl = new URL(window.location.href)
+      currentUrl.searchParams.delete('phantom_public_key')
+      window.history.replaceState({}, '', currentUrl.toString())
 
-      if (response) {
-        const currentUrl = new URL(window.location.href)
-        currentUrl.searchParams.delete('phantom_encryption_public_key')
-        currentUrl.searchParams.delete('data')
-        currentUrl.searchParams.delete('nonce')
-        currentUrl.searchParams.delete('errorCode')
-        currentUrl.searchParams.delete('errorMessage')
-
-        if (isPhantomBrowser) {
-          const redirectUrl = localStorage.getItem('phantom_redirect_url')
-          if (redirectUrl) {
-            localStorage.removeItem('phantom_redirect_url')
-            window.location.href = redirectUrl
-            return
-          }
-        }
-
-        window.history.replaceState({}, '', currentUrl.toString())
-
-        localStorage.setItem('phantom_public_key', response.publicKey)
-
-        if (isMobile) {
-          const phantomWallet = wallets.find(w => w.adapter.name === 'Phantom')
-          if (!phantomWallet) {
-            throw new Error('Phantom wallet not found in adapter list')
-          }
-
-          select(phantomWallet.adapter.name)
-
-          const publicKey = new PublicKey(response.publicKey)
-          const adapter = phantomWallet.adapter as unknown as PhantomAdapter
-          adapter.publicKey = publicKey
-          adapter.connected = true
-        } else {
-          const provider = getPhantomProvider()
-          if (provider) {
-            provider.connect().catch(() => {
-              localStorage.removeItem('phantom_public_key')
-            })
-          }
-        }
-      }
-    }
-  }, [isMobile, select, wallets, isPhantomBrowser])
-
-  useEffect(() => {
-    if (!connected && localStorage.getItem('phantom_public_key')) {
+      // Connect wallet
       const phantomWallet = wallets.find(w => w.adapter.name === 'Phantom')
       if (phantomWallet) {
         select(phantomWallet.adapter.name)
       }
     }
-  }, [connected, select, wallets])
+  }, [select, wallets])
 
   const handleDisconnect = useCallback(async () => {
-    localStorage.removeItem('phantom_public_key')
-    localStorage.removeItem('phantom_redirect_url')
     disconnect()
   }, [disconnect])
 
@@ -126,7 +68,6 @@ export function WalletButton({ className }: WalletButtonProps) {
     if (connected) {
       handleDisconnect()
     } else if (isMobile) {
-      localStorage.setItem('phantom_redirect_url', window.location.href)
       connectPhantomMobile()
     } else if (isPhantomAvailable) {
       setVisible(true)
