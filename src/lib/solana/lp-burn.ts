@@ -1,6 +1,5 @@
 import { Connection, PublicKey, Transaction, ParsedAccountData } from '@solana/web3.js'
 import { createBurnInstruction } from '@solana/spl-token'
-import { BN } from 'bn.js'
 import { createFeeInstruction } from './fees'
 import { isAdminWallet } from './admin-config'
 import { isLPToken } from './tokens'
@@ -88,15 +87,16 @@ export async function burnLPTokens({
     const decimals = tokenData.info.mint.decimals
 
     // Convert amount to raw amount based on decimals
-    const rawAmount = new BN(parseFloat(amount) * Math.pow(10, decimals))
+    // Use string for precise decimal multiplication
+    const floatAmount = parseFloat(amount)
+    const baseStr = floatAmount.toFixed(decimals) // Convert to string with exact decimal places
+    const wholePart = baseStr.split('.')[0]
+    const decimalPart = (baseStr.split('.')[1] || '').padEnd(decimals, '0')
+    const rawAmountStr = wholePart + decimalPart
+    const rawAmount = BigInt(rawAmountStr)
 
     // Create burn instruction
-    const burnInstruction = createBurnInstruction(
-      tokenAccount.value[0].pubkey,
-      mintPubkey,
-      wallet,
-      rawAmount.toNumber()
-    )
+    const burnInstruction = createBurnInstruction(tokenAccount.value[0].pubkey, mintPubkey, wallet, rawAmount)
 
     onProgress?.('Creating transaction...')
 
