@@ -7,7 +7,7 @@ export function HowItWorks() {
         <h2 className='font-display mb-3 sm:mb-4 text-2xl sm:text-3xl font-bold tracking-tight text-[#E6E6E6] md:text-4xl'>
           How It Works
         </h2>
-        <p className='text-sm sm:text-lg text-[#E6E6E6]/60'>
+        <p className='text-base sm:text-lg text-[#E6E6E6]/60'>
           Simple, secure, and transparent token burning for both regular and LP tokens.
         </p>
       </div>
