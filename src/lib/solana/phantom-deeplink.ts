@@ -92,9 +92,9 @@ export const connectPhantomMobile = () => {
     })
   )
 
-  // Store current URL to return to
+  // For mobile web browser flow, we need to encode the entire URL
   const currentUrl = window.location.href
-  localStorage.setItem('phantom_redirect_url', currentUrl)
+  const encodedUrl = encodeURIComponent(currentUrl)
 
   // Construct URL exactly as shown in documentation
   const params = new URLSearchParams({
@@ -104,12 +104,14 @@ export const connectPhantomMobile = () => {
     cluster: 'mainnet-beta'
   })
 
-  const url = `${PHANTOM_DEEPLINK_BASE_URL}/v1/connect?${params.toString()}`
+  // For mobile web browser, we need to use a special format
+  const phantomUrl = `https://phantom.app/ul/v1/connect?${params.toString()}`
+  const deepLink = `https://phantom.app/ul/browse/${encodedUrl}?ref=${encodeURIComponent(phantomUrl)}`
 
-  console.log('Opening Phantom URL:', url)
+  console.log('Opening Phantom URL:', deepLink)
 
   // For mobile browsers, redirect to Phantom
-  window.location.href = url
+  window.location.href = deepLink
 }
 
 interface PhantomResponseData {
