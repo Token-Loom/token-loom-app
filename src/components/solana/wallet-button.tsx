@@ -5,7 +5,7 @@ import { useWalletModal } from '@solana/wallet-adapter-react-ui'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import { useEffect, useState, useCallback } from 'react'
-import { checkForPhantom, isMobileDevice, connectPhantomMobile } from '@/lib/solana/phantom-deeplink'
+import { isMobileDevice, connectPhantomMobile } from '@/lib/solana/phantom-deeplink'
 
 interface WalletButtonProps {
   className?: string
@@ -14,23 +14,13 @@ interface WalletButtonProps {
 export function WalletButton({ className }: WalletButtonProps) {
   const { publicKey, disconnect, connected, select, wallets } = useWallet()
   const { setVisible } = useWalletModal()
-  const [isPhantomAvailable, setIsPhantomAvailable] = useState(false)
   const [isMobile, setIsMobile] = useState(false)
   const [isConnecting, setIsConnecting] = useState(false)
 
   useEffect(() => {
-    const checkPhantom = () => {
-      const isAvailable = checkForPhantom()
-      setIsPhantomAvailable(isAvailable)
-    }
-
     const checkDevice = () => {
       const mobile = isMobileDevice()
       setIsMobile(mobile)
-      // On mobile devices, we want to check for Phantom more aggressively
-      if (mobile) {
-        checkPhantom()
-      }
     }
 
     // Initial check
@@ -45,20 +35,11 @@ export function WalletButton({ className }: WalletButtonProps) {
       window.screen.orientation.addEventListener('change', checkDevice)
     }
 
-    // Check for Phantom periodically on mobile
-    let phantomCheckInterval: NodeJS.Timeout | null = null
-    if (isMobile && !connected) {
-      phantomCheckInterval = setInterval(checkPhantom, 1000)
-    }
-
     return () => {
       window.removeEventListener('orientationchange', checkDevice)
       window.removeEventListener('resize', checkDevice)
       if ('screen' in window && 'orientation' in window.screen) {
         window.screen.orientation.removeEventListener('change', checkDevice)
-      }
-      if (phantomCheckInterval) {
-        clearInterval(phantomCheckInterval)
       }
     }
   }, [isMobile, connected])
@@ -106,7 +87,11 @@ export function WalletButton({ className }: WalletButtonProps) {
       handleDisconnect()
     } else if (isConnecting) {
       return // Prevent multiple connection attempts
-    } else if (isMobile) {
+    } else if (!isMobile) {
+      // On desktop, always show the wallet selection modal
+      setVisible(true)
+    } else {
+      // On mobile, use Phantom's mobile flow
       setIsConnecting(true)
       try {
         connectPhantomMobile()
@@ -114,10 +99,6 @@ export function WalletButton({ className }: WalletButtonProps) {
         console.error('Error connecting to Phantom mobile:', error)
         setIsConnecting(false)
       }
-    } else if (isPhantomAvailable) {
-      setVisible(true)
-    } else {
-      window.open('https://phantom.app/', '_blank')
     }
   }
 

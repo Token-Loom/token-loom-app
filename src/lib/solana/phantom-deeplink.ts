@@ -50,29 +50,15 @@ export const isMobileDevice = (): boolean => {
   if (typeof window === 'undefined') return false
 
   // Check user agent for mobile devices including foldables
-  const userAgentCheck =
-    /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini|Mobile|mobile|CriOS|SM-F|Fold/i.test(
-      navigator.userAgent
-    )
+  const userAgentCheck = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini|Mobile|mobile|CriOS/i.test(
+    navigator.userAgent
+  )
 
-  // Check for touch support
-  const touchSupport = 'ontouchstart' in window || navigator.maxTouchPoints > 0
+  // Check for Samsung foldable devices specifically
+  const foldableCheck = /SM-F|Fold/i.test(navigator.userAgent)
 
-  // Check screen characteristics
-  const screenCheck = window.innerWidth <= 1024 || window.screen.width <= 1024
-
-  // For foldable devices, check for specific features
-  const foldableCheck =
-    'windowSegments' in window || // Check for foldable-specific API
-    // Samsung foldable detection
-    /SM-F|Fold/i.test(navigator.userAgent) ||
-    // Additional foldable checks
-    ('screen' in window && 'orientation' in window.screen) ||
-    // Check for multi-screen API
-    'getWindowSegments' in window
-
-  // Return true if any of these conditions are met
-  return userAgentCheck || (touchSupport && screenCheck) || foldableCheck
+  // Return true only for actual mobile devices
+  return userAgentCheck || foldableCheck
 }
 
 // Function to build a Phantom deep link URL
