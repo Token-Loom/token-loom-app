@@ -142,11 +142,12 @@ export function WalletButton({ className }: WalletButtonProps) {
           ? `${publicKey.toString().slice(0, 4)}...${publicKey.toString().slice(-4)}`
           : 'Connect Wallet'}
       </Button>
-      {/* Debug Overlay */}
-      <div className='fixed bottom-16 left-4 right-4 bg-black/80 text-white p-2 text-xs font-mono z-50 rounded-lg mb-4 max-h-32 overflow-y-auto'>
+      {/* Debug Overlay - removed isMobile check temporarily */}
+      <div className='fixed h-[660px] top-20 left-4 right-4 bg-black text-white p-4 text-sm font-mono z-50 rounded-lg shadow-lg border border-purple-500'>
         <div className='max-w-full'>
+          <div className='font-bold mb-2'>Debug Logs:</div>
           {debugLogs.map((log, i) => (
-            <div key={i} className='whitespace-pre-wrap break-words'>
+            <div key={i} className='whitespace-pre-wrap break-words mb-1'>
               {log}
             </div>
           ))}
