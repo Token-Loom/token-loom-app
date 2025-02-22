@@ -32,7 +32,13 @@ declare global {
 export const checkForPhantom = (): boolean => {
   if (typeof window === 'undefined') return false
   const provider = window.phantom?.solana
-  return provider?.isPhantom || false
+  const hasProvider = provider?.isPhantom || false
+  console.log('Phantom check:', {
+    hasPhantom: 'phantom' in window,
+    hasProvider: !!provider,
+    isPhantom: provider?.isPhantom
+  })
+  return hasProvider
 }
 
 // Function to check if we're on a mobile device
@@ -50,6 +56,10 @@ export const buildPhantomDeepLink = (path: string, params: Record<string, string
 // Function to get the Phantom provider
 export const getPhantomProvider = (): PhantomProvider['solana'] | null => {
   if (typeof window === 'undefined') return null
+  console.log('Getting provider:', {
+    hasPhantom: 'phantom' in window,
+    provider: window.phantom?.solana
+  })
   if ('phantom' in window) {
     const provider = window.phantom?.solana
     if (provider?.isPhantom) {
@@ -78,6 +88,7 @@ export const connectPhantomMobile = () => {
   // Construct URL exactly as shown in documentation
   const url = `${PHANTOM_DEEPLINK_BASE_URL}/v1/connect?dapp_encryption_public_key=${bs58.encode(dappKeyPair.publicKey)}&redirect_link=${encodeURIComponent(window.location.href)}&app_url=${encodeURIComponent(window.location.origin)}&cluster=mainnet-beta`
 
+  console.log('Opening Phantom URL:', url)
   // For mobile browsers, we need to use window.location.href
   window.location.href = url
 }

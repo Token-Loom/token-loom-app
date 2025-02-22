@@ -30,18 +30,39 @@ export function WalletButton({ className }: WalletButtonProps) {
   }
 
   useEffect(() => {
-    setIsPhantomAvailable(checkForPhantom())
+    const checkPhantom = () => {
+      const isAvailable = checkForPhantom()
+      setIsPhantomAvailable(isAvailable)
+      addDebugLog(`Phantom check - Available: ${isAvailable}`)
+      addDebugLog(`Window.phantom: ${!!window.phantom}`)
+      addDebugLog(`Solana provider: ${!!window.phantom?.solana}`)
+    }
+
     setIsMobile(isMobileDevice())
     addDebugLog('Debug overlay active')
     addDebugLog(`Device: ${isMobileDevice() ? 'Mobile' : 'Desktop'}`)
-    addDebugLog(`Phantom Available: ${checkForPhantom()}`)
-    addDebugLog(`URL: ${window.location.href.slice(0, 30)}...`)
+    addDebugLog(`Screen: ${window.innerWidth}x${window.innerHeight}`)
+    checkPhantom()
+
+    // Add orientation change listener
+    const handleOrientationChange = () => {
+      addDebugLog(`Orientation changed: ${window.innerWidth}x${window.innerHeight}`)
+      checkPhantom()
+    }
+
+    window.addEventListener('orientationchange', handleOrientationChange)
+    window.addEventListener('resize', handleOrientationChange)
 
     // Restore session if exists
     const savedSession = localStorage.getItem('phantom_session')
     if (savedSession) {
       setSession(savedSession)
       addDebugLog('Session restored')
+    }
+
+    return () => {
+      window.removeEventListener('orientationchange', handleOrientationChange)
+      window.removeEventListener('resize', handleOrientationChange)
     }
   }, [])
 
@@ -118,6 +139,7 @@ export function WalletButton({ className }: WalletButtonProps) {
     } else if (isMobile) {
       // On mobile, use deep linking
       addDebugLog('Initiating mobile deep link...')
+      addDebugLog(`Current URL: ${window.location.href}`)
       connectPhantomMobile()
     } else if (isPhantomAvailable) {
       // On desktop with Phantom installed, use wallet adapter
