@@ -99,6 +99,9 @@ export function WalletButton({ className }: WalletButtonProps) {
       const url = window.location.href
       addDebugLog(`Checking URL: ${url.slice(0, 50)}...`)
 
+      // Get the stored redirect URL
+      const storedRedirectUrl = localStorage.getItem('phantom_redirect_url')
+
       if (url.includes('phantom_encryption_public_key')) {
         addDebugLog('Found Phantom response')
         const response = handlePhantomResponse(url, addDebugLog)
@@ -106,8 +109,13 @@ export function WalletButton({ className }: WalletButtonProps) {
         if (response) {
           addDebugLog(`Got public key: ${response.publicKey.slice(0, 10)}...`)
 
-          // Clean up the URL first to prevent reload loops
-          window.history.replaceState({}, '', window.location.origin)
+          // Clean up the URL and restore original path if available
+          if (storedRedirectUrl) {
+            window.history.replaceState({}, '', storedRedirectUrl)
+            localStorage.removeItem('phantom_redirect_url')
+          } else {
+            window.history.replaceState({}, '', window.location.origin)
+          }
 
           // Store public key
           localStorage.setItem('phantom_public_key', response.publicKey)

@@ -108,8 +108,8 @@ export const connectPhantomMobile = () => {
 
   console.log('Opening Phantom URL:', url)
 
-  // For mobile browsers, we need to use window.location.replace to prevent new tab
-  window.location.replace(url)
+  // For mobile browsers, we use window.location.href to maintain the same tab
+  window.location.href = url
 }
 
 interface PhantomResponseData {

@@ -28,10 +28,16 @@ export const SolanaWalletProvider: FC<Props> = ({ children }) => {
           icon: 'https://controlledburn-mx4k.vercel.app/logo.svg',
           url: 'https://controlledburn-mx4k.vercel.app'
         },
-        // Enable mobile web browser deep linking
+        // Enable mobile web browser deep linking with proper configuration
         mobile: {
           enabled: true,
-          getUri: (uri: string) => uri
+          getUri: (uri: string) => {
+            // Store the current URL before redirecting
+            if (typeof window !== 'undefined') {
+              localStorage.setItem('phantom_redirect_url', window.location.href)
+            }
+            return uri
+          }
         }
       }),
       new SolflareWalletAdapter()
