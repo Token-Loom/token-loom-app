@@ -18,19 +18,21 @@ interface WalletButtonProps {
   className?: string
 }
 
-interface PhantomWalletAdapter {
-  publicKey?: PublicKey
-  connected?: boolean
+interface PhantomAdapter {
+  publicKey: PublicKey | null
+  connected: boolean
+  name: string
 }
 
 export function WalletButton({ className }: WalletButtonProps) {
-  const wallet = useWallet()
+  const { publicKey, disconnect, connected, select, wallets } = useWallet()
   const { setVisible } = useWalletModal()
   const [isPhantomAvailable, setIsPhantomAvailable] = useState(false)
   const [isMobile, setIsMobile] = useState(false)
   const [debugLogs, setDebugLogs] = useState<string[]>([])
 
   const addDebugLog = (message: string) => {
+    console.log('Debug:', message) // Also log to console for debugging
     setDebugLogs(prev => [...prev.slice(-4), message]) // Keep last 5 messages
   }
 
@@ -66,25 +68,9 @@ export function WalletButton({ className }: WalletButtonProps) {
 
   const handleDisconnect = useCallback(async () => {
     // Clear storage
-    localStorage.removeItem('phantom_session')
     localStorage.removeItem('phantom_public_key')
-
-    // Reset wallet adapter state
-    if (isMobile) {
-      wallet.disconnect()
-    } else {
-      // If on desktop, we need to handle disconnect through Phantom
-      const provider = getPhantomProvider()
-      if (provider) {
-        try {
-          await provider.disconnect()
-        } catch (error) {
-          console.error('Error disconnecting from Phantom:', error)
-        }
-      }
-      wallet.disconnect()
-    }
-  }, [wallet, isMobile])
+    disconnect()
+  }, [disconnect])
 
   // Handle Phantom connection response
   useEffect(() => {
@@ -109,16 +95,18 @@ export function WalletButton({ className }: WalletButtonProps) {
         // Update wallet adapter state
         if (isMobile) {
           try {
-            // Set the wallet adapter state directly
-            const publicKey = new PublicKey(response.publicKey)
-            // Force the wallet to be connected with the public key
-            const phantomWallet = wallet.wallets.find(w => w.adapter.name === 'Phantom')
+            const phantomWallet = wallets.find(w => w.adapter.name === 'Phantom')
             if (phantomWallet) {
-              wallet.select(phantomWallet.adapter.name)
-              const adapter = phantomWallet.adapter as unknown as PhantomWalletAdapter
+              addDebugLog('Found Phantom wallet adapter')
+              select(phantomWallet.adapter.name)
+              addDebugLog('Selected Phantom wallet')
+
+              // Force connection state
+              const publicKey = new PublicKey(response.publicKey)
+              const adapter = phantomWallet.adapter as unknown as PhantomAdapter
               adapter.publicKey = publicKey
               adapter.connected = true
-              addDebugLog('Mobile connection successful')
+              addDebugLog('Set connection state')
             } else {
               addDebugLog('Phantom wallet not found in adapter list')
             }
@@ -136,8 +124,6 @@ export function WalletButton({ className }: WalletButtonProps) {
               })
               .catch(error => {
                 addDebugLog(`Error: ${error.message}`)
-                // Clear storage if connection fails
-                localStorage.removeItem('phantom_session')
                 localStorage.removeItem('phantom_public_key')
               })
           } else {
@@ -148,10 +134,10 @@ export function WalletButton({ className }: WalletButtonProps) {
         addDebugLog('Failed to handle response')
       }
     }
-  }, [wallet, isMobile])
+  }, [isMobile, select, wallets])
 
   const handleClick = () => {
-    if (wallet.connected) {
+    if (connected) {
       handleDisconnect()
     } else if (isMobile) {
       // On mobile, always use deep linking
@@ -177,13 +163,13 @@ export function WalletButton({ className }: WalletButtonProps) {
         )}
         onClick={handleClick}
       >
-        {wallet.connected && wallet.publicKey
-          ? `${wallet.publicKey.toString().slice(0, 4)}...${wallet.publicKey.toString().slice(-4)}`
+        {connected && publicKey
+          ? `${publicKey.toString().slice(0, 4)}...${publicKey.toString().slice(-4)}`
           : 'Connect Wallet'}
       </Button>
       {/* Debug Overlay */}
-      <div className='fixed bottom-16 left-4 right-4 bg-black/80 text-white p-2 text-xs font-mono z-50 rounded-lg mb-4 max-h-32 overflow-y-auto'>
-        <div className='max-w-full'>
+      <div className='fixed bottom-0 left-0 right-0 bg-black/80 text-white p-2 text-xs font-mono z-[100] border-t border-purple-500'>
+        <div className='max-w-full overflow-y-auto max-h-32'>
           {debugLogs.map((log, i) => (
             <div key={i} className='whitespace-pre-wrap break-words'>
               {log}
