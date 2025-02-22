@@ -66,8 +66,8 @@ export const connectPhantomMobile = () => {
   // Generate a new keypair for this connection
   const dappKeyPair = nacl.box.keyPair()
 
-  // Save keypair to session storage for retrieving after redirect
-  sessionStorage.setItem(
+  // Save keypair to local storage for retrieving after redirect
+  localStorage.setItem(
     'phantom_keypair',
     JSON.stringify({
       publicKey: Buffer.from(dappKeyPair.publicKey).toString('hex'),
@@ -116,11 +116,11 @@ export const handlePhantomResponse = (
       throw new Error('Missing required parameters')
     }
 
-    // Retrieve our keypair from session storage
-    const keypairString = sessionStorage.getItem('phantom_keypair')
+    // Retrieve our keypair from local storage
+    const keypairString = localStorage.getItem('phantom_keypair')
     if (!keypairString) {
-      onDebug?.('No keypair in session')
-      throw new Error('No keypair found in session storage')
+      onDebug?.('No keypair in storage')
+      throw new Error('No keypair found in storage')
     }
 
     const keypair = JSON.parse(keypairString)
@@ -144,8 +144,8 @@ export const handlePhantomResponse = (
     const decodedData = JSON.parse(Buffer.from(decryptedData).toString('utf8')) as PhantomResponseData
     onDebug?.('Parsed response data')
 
-    // Clean up session storage
-    sessionStorage.removeItem('phantom_keypair')
+    // Clean up storage
+    localStorage.removeItem('phantom_keypair')
 
     return {
       publicKey: decodedData.public_key,
