@@ -23,19 +23,29 @@ export function WalletButton({ className }: WalletButtonProps) {
       setIsPhantomAvailable(isAvailable)
     }
 
-    setIsMobile(isMobileDevice())
-    checkPhantom()
-
-    const handleOrientationChange = () => {
+    const checkDevice = () => {
+      setIsMobile(isMobileDevice())
       checkPhantom()
     }
 
-    window.addEventListener('orientationchange', handleOrientationChange)
-    window.addEventListener('resize', handleOrientationChange)
+    // Initial check
+    checkDevice()
+
+    // Handle orientation and screen changes
+    window.addEventListener('orientationchange', checkDevice)
+    window.addEventListener('resize', checkDevice)
+
+    // Some foldable devices emit a 'resize' event when folded/unfolded
+    if ('screen' in window && 'orientation' in window.screen) {
+      window.screen.orientation.addEventListener('change', checkDevice)
+    }
 
     return () => {
-      window.removeEventListener('orientationchange', handleOrientationChange)
-      window.removeEventListener('resize', handleOrientationChange)
+      window.removeEventListener('orientationchange', checkDevice)
+      window.removeEventListener('resize', checkDevice)
+      if ('screen' in window && 'orientation' in window.screen) {
+        window.screen.orientation.removeEventListener('change', checkDevice)
+      }
     }
   }, [])
 

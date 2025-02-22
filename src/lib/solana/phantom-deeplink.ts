@@ -48,7 +48,28 @@ export const checkForPhantom = (): boolean => {
 // Function to check if we're on a mobile device
 export const isMobileDevice = (): boolean => {
   if (typeof window === 'undefined') return false
-  return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
+
+  // Check user agent for mobile devices
+  const userAgentCheck = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini|Mobile|mobile|CriOS/i.test(
+    navigator.userAgent
+  )
+
+  // Check for touch support
+  const touchSupport = 'ontouchstart' in window || navigator.maxTouchPoints > 0
+
+  // Check screen characteristics
+  const screenCheck = window.innerWidth <= 1024 || window.screen.width <= 1024
+
+  // For foldable devices, also check for specific features
+  const foldableCheck =
+    'windowSegments' in window || // Check for foldable-specific API
+    // Samsung foldable detection
+    /Samsung.*SM-F/i.test(navigator.userAgent) ||
+    // Check for other common foldable identifiers
+    /Fold/i.test(navigator.userAgent)
+
+  // Return true if any of these conditions are met
+  return userAgentCheck || (touchSupport && screenCheck) || foldableCheck
 }
 
 // Function to build a Phantom deep link URL
