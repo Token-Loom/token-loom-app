@@ -75,7 +75,17 @@ export function WalletButton({ className }: WalletButtonProps) {
         // Update wallet adapter state by connecting through provider
         const provider = getPhantomProvider()
         if (provider) {
-          provider.connect({ onlyIfTrusted: true }).catch(error => console.error('Error connecting to Phantom:', error))
+          provider
+            .connect()
+            .then(() => {
+              console.log('Successfully connected to Phantom')
+            })
+            .catch(error => {
+              console.error('Error connecting to Phantom:', error)
+              // Clear session if connection fails
+              sessionStorage.removeItem('phantom_session')
+              setSession(null)
+            })
         }
       }
     }
