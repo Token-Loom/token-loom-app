@@ -27,6 +27,17 @@ export const SolanaWalletProvider: FC<Props> = ({ children }) => {
           name: 'ControlledBurn',
           icon: 'https://controlledburn-mx4k.vercel.app/logo.svg',
           url: 'https://controlledburn-mx4k.vercel.app'
+        },
+        // Enable mobile web browser deep linking with proper configuration
+        mobile: {
+          enabled: true,
+          getUri: (uri: string) => {
+            // Store the current URL before redirecting
+            if (typeof window !== 'undefined') {
+              localStorage.setItem('phantom_redirect_url', window.location.href)
+            }
+            return uri
+          }
         }
       }),
       new SolflareWalletAdapter()
@@ -36,7 +47,7 @@ export const SolanaWalletProvider: FC<Props> = ({ children }) => {
 
   return (
     <ConnectionProvider endpoint={endpoint}>
-      <WalletProvider wallets={wallets} autoConnect={false}>
+      <WalletProvider wallets={wallets} autoConnect>
         <WalletModalProvider>{children}</WalletModalProvider>
       </WalletProvider>
     </ConnectionProvider>
