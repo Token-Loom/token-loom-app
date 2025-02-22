@@ -31,32 +31,84 @@ interface ScheduledBurn {
 export function BurnScheduleManager() {
   const [schedules, setSchedules] = useState<ScheduledBurn[]>([])
   const [isLoading, setIsLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  const [error, setError] = useState<{ message: string; details?: string } | null>(null)
+  const [retryCount, setRetryCount] = useState(0)
+  const maxRetries = 3
+  const retryDelay = 2000 // 2 seconds
 
-  useEffect(() => {
-    fetchSchedules()
-    const interval = setInterval(fetchSchedules, 10000) // Refresh every 10 seconds
-    return () => clearInterval(interval)
-  }, [])
-
-  const fetchSchedules = async () => {
+  const fetchWithRetry = async (currentRetry: number) => {
     try {
       setError(null)
       const response = await fetch('/api/admin/schedules')
+      const data = await response.json()
+
       if (response.ok) {
-        const data = await response.json()
         setSchedules(data)
+        setRetryCount(0) // Reset retry count on success
       } else {
-        const errorData = await response.json()
-        setError(errorData.error || 'Failed to fetch schedules')
+        // If it's a temporary error (like prepared statement error), retry
+        if (data.details?.includes('prepared statement') && currentRetry < maxRetries) {
+          setError({
+            message: 'Temporary connection issue, retrying...',
+            details: `Retry attempt ${currentRetry + 1} of ${maxRetries}`
+          })
+          setTimeout(() => fetchWithRetry(currentRetry + 1), retryDelay)
+        } else {
+          setError({
+            message: data.error || 'Failed to fetch schedules',
+            details: data.details
+          })
+        }
       }
     } catch (error) {
       console.error('Error fetching schedules:', error)
-      setError('Failed to fetch schedules')
+      // Retry on network errors
+      if (currentRetry < maxRetries) {
+        setError({
+          message: 'Connection error, retrying...',
+          details: `Retry attempt ${currentRetry + 1} of ${maxRetries}`
+        })
+        setTimeout(() => fetchWithRetry(currentRetry + 1), retryDelay)
+      } else {
+        setError({
+          message: 'Failed to fetch schedules',
+          details: error instanceof Error ? error.message : 'Unknown error occurred'
+        })
+      }
     } finally {
       setIsLoading(false)
     }
   }
+
+  useEffect(() => {
+    let mounted = true
+    let retryTimeout: NodeJS.Timeout | undefined
+
+    const fetchData = async () => {
+      if (!mounted) return
+
+      // Clear any existing timeout
+      if (retryTimeout) {
+        clearTimeout(retryTimeout)
+      }
+
+      // Start a new fetch attempt
+      await fetchWithRetry(0)
+    }
+
+    fetchData()
+
+    // Set up polling interval
+    const pollInterval = setInterval(fetchData, 10000)
+
+    return () => {
+      mounted = false
+      clearInterval(pollInterval)
+      if (retryTimeout) {
+        clearTimeout(retryTimeout)
+      }
+    }
+  }, [])
 
   const handleRetry = async (id: string) => {
     try {
@@ -64,7 +116,7 @@ export function BurnScheduleManager() {
         method: 'POST'
       })
       if (response.ok) {
-        fetchSchedules()
+        fetchWithRetry(0)
       }
     } catch (error) {
       console.error('Error retrying schedule:', error)
@@ -77,7 +129,7 @@ export function BurnScheduleManager() {
         method: 'POST'
       })
       if (response.ok) {
-        fetchSchedules()
+        fetchWithRetry(0)
       }
     } catch (error) {
       console.error('Error toggling schedule:', error)
@@ -158,10 +210,13 @@ export function BurnScheduleManager() {
       </CardHeader>
       <CardContent>
         {error ? (
-          <Alert variant='destructive'>
+          <Alert variant={error.message.includes('retrying') ? 'default' : 'destructive'}>
             <AlertCircle className='h-4 w-4' />
-            <AlertTitle>Error</AlertTitle>
-            <AlertDescription>{error}</AlertDescription>
+            <AlertTitle>{error.message.includes('retrying') ? 'Reconnecting...' : 'Error'}</AlertTitle>
+            <AlertDescription>
+              {error.message}
+              {error.details && <div className='mt-2 text-sm text-[#A3A3A3]'>{error.details}</div>}
+            </AlertDescription>
           </Alert>
         ) : isLoading ? (
           <div className='flex items-center justify-center py-8'>

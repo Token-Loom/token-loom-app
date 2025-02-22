@@ -12,7 +12,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { Button } from '@/components/ui/button'
 import { useTokenBalances } from '@/hooks/use-token-balances'
 import { BurnFormData, burnFormSchema } from '@/lib/types/burn'
-import { CalendarIcon, PlusCircle, Trash2 } from 'lucide-react'
+import { CalendarIcon, PlusCircle, Trash2, Flame, Clock, MessageSquare } from 'lucide-react'
 import { Calendar } from '@/components/ui/calendar'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { cn, formatTokenAmount } from '@/lib/utils'
@@ -183,127 +183,121 @@ export function BurnForm() {
   return (
     <Card className='overflow-hidden border-[#1E1E24] bg-black/20 backdrop-blur'>
       <div className='absolute inset-0 bg-gradient-to-r from-[#9945FF]/5 to-[#14F195]/5 opacity-50' />
-      <CardHeader className='relative'>
-        <CardTitle className='text-xl sm:text-2xl'>Token Burn</CardTitle>
-        <CardDescription className='text-[#A3A3A3] text-sm sm:text-base'>
+      <CardHeader className='relative pb-4'>
+        <CardTitle className='text-xl sm:text-2xl flex items-center gap-2'>
+          <Flame className='w-6 h-6 text-[#14F195]' />
+          Token Burn
+        </CardTitle>
+        <CardDescription className='text-[#E6E6E6]/60 text-sm sm:text-base'>
           Select a token and amount to burn
         </CardDescription>
-        {error && (
-          <Alert variant='destructive' className='mt-2'>
-            <AlertTitle>Error</AlertTitle>
-            <AlertDescription className='text-sm'>{error}</AlertDescription>
-          </Alert>
-        )}
-        {burnStatus && (
-          <Alert className='mt-2'>
-            <AlertTitle>Status</AlertTitle>
-            <AlertDescription className='text-sm'>{burnStatus}</AlertDescription>
-          </Alert>
-        )}
-        {txSignature && (
-          <Alert className='mt-2'>
-            <AlertTitle>Transaction Confirmed</AlertTitle>
-            <AlertDescription className='text-sm'>
-              <a
-                href={`https://explorer.solana.com/tx/${txSignature}`}
-                target='_blank'
-                rel='noopener noreferrer'
-                className='text-[#14F195] hover:underline'
-              >
-                View on Solana Explorer
-              </a>
-            </AlertDescription>
-          </Alert>
-        )}
       </CardHeader>
-      <CardContent className='relative'>
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className='space-y-4 sm:space-y-6'>
-            <FormField
-              control={form.control}
-              name='tokenMint'
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className='text-[#E6E6E6] text-sm sm:text-base'>Token</FormLabel>
-                  <Select
-                    onValueChange={value => {
-                      field.onChange(value)
-                      const token = tokens.find(t => t.mint === value)
-                      setSelectedToken(token || null)
-                    }}
-                    value={field.value}
-                  >
-                    <SelectTrigger className='border-[#1E1E24] bg-black/20 text-sm sm:text-base h-9 sm:h-10'>
-                      <SelectValue placeholder={isLoading ? 'Loading tokens...' : 'Select a token'}>
-                        {field.value &&
-                          (() => {
-                            const selectedToken = tokens.find(t => t.mint === field.value)
-                            if (!selectedToken) return null
-                            const symbol = selectedToken.symbol?.trim() || selectedToken.mint.slice(0, 8)
-                            const displayText = `${symbol} (${formatTokenAmount(selectedToken.uiAmount, selectedToken.decimals)})`
-                            return displayText
-                          })()}
-                      </SelectValue>
-                    </SelectTrigger>
-                    <SelectContent className='border-[#1E1E24] bg-[#13141F] text-sm sm:text-base'>
-                      {tokens.length === 0 && !isLoading && (
-                        <div className='p-2 text-sm text-[#A3A3A3]'>No tokens found in wallet</div>
-                      )}
-                      {tokens.map(token => {
-                        const symbol = token.symbol?.trim() || token.mint.slice(0, 8)
-                        let displayText = `${symbol} (${formatTokenAmount(token.uiAmount, token.decimals)})`
 
-                        // Add LP token indicator and pair info if it's an LP token
-                        if (isLPToken(token)) {
-                          displayText = `${displayText} - LP Token`
-                        }
-
-                        return (
-                          <SelectItem key={token.mint} value={token.mint} className='text-sm sm:text-base'>
-                            {displayText}
-                          </SelectItem>
-                        )
-                      })}
-                    </SelectContent>
-                  </Select>
-                  <FormMessage className='text-xs sm:text-sm' />
-                </FormItem>
-              )}
-            />
-
-            {/* Show LP token details if selected */}
-            {selectedToken && isLPToken(selectedToken) && (
-              <div className='rounded-lg border p-4 space-y-2'>
-                <h4 className='font-medium'>LP Token Details</h4>
-                <div className='text-sm text-muted-foreground'>
-                  <p>
-                    Token Pair: {selectedToken.token0?.symbol}/{selectedToken.token1?.symbol}
-                  </p>
-                  <p>Pool: {selectedToken.poolAddress}</p>
-                </div>
-              </div>
+      <CardContent className='relative space-y-6'>
+        {/* Status Messages */}
+        {(error || burnStatus || txSignature) && (
+          <div className='space-y-2 mb-6'>
+            {error && (
+              <Alert variant='destructive'>
+                <AlertTitle>Error</AlertTitle>
+                <AlertDescription className='text-sm'>{error}</AlertDescription>
+              </Alert>
             )}
+            {burnStatus && (
+              <Alert>
+                <AlertTitle>Status</AlertTitle>
+                <AlertDescription className='text-sm'>{burnStatus}</AlertDescription>
+              </Alert>
+            )}
+            {txSignature && (
+              <Alert>
+                <AlertTitle>Transaction Confirmed</AlertTitle>
+                <AlertDescription className='text-sm'>
+                  <a
+                    href={`https://explorer.solana.com/tx/${txSignature}`}
+                    target='_blank'
+                    rel='noopener noreferrer'
+                    className='text-[#14F195] hover:underline'
+                  >
+                    View on Solana Explorer
+                  </a>
+                </AlertDescription>
+              </Alert>
+            )}
+          </div>
+        )}
 
-            <FormField
-              control={form.control}
-              name='amount'
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className='text-[#E6E6E6] text-sm sm:text-base'>Amount</FormLabel>
-                  <FormControl>
-                    <Input
-                      {...field}
-                      type='number'
-                      step='any'
-                      className='border-[#1E1E24] bg-black/20 text-sm sm:text-base h-9 sm:h-10'
-                      placeholder='Enter amount to burn'
-                    />
-                  </FormControl>
-                  <FormMessage className='text-xs sm:text-sm' />
-                </FormItem>
-              )}
-            />
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className='space-y-6'>
+            <div className='grid gap-6 sm:grid-cols-2'>
+              {/* Token Selection */}
+              <FormField
+                control={form.control}
+                name='tokenMint'
+                render={({ field }) => (
+                  <FormItem className='sm:col-span-2'>
+                    <FormLabel className='text-[#E6E6E6] text-sm sm:text-base'>Select Token</FormLabel>
+                    <Select
+                      onValueChange={value => {
+                        field.onChange(value)
+                        const token = tokens.find(t => t.mint === value)
+                        setSelectedToken(token || null)
+                      }}
+                      value={field.value}
+                    >
+                      <SelectTrigger className='border-[#1E1E24] bg-black/20 text-sm sm:text-base h-12'>
+                        <SelectValue placeholder={isLoading ? 'Loading tokens...' : 'Choose a token to burn'} />
+                      </SelectTrigger>
+                      <SelectContent className='border-[#1E1E24] bg-[#13141F]'>
+                        {tokens.length === 0 && !isLoading && (
+                          <div className='p-4 text-sm text-[#E6E6E6]/60 text-center'>No tokens found in wallet</div>
+                        )}
+                        {tokens.map(token => {
+                          const symbol = token.symbol?.trim() || token.mint.slice(0, 8)
+                          let displayText = `${symbol} (${formatTokenAmount(token.uiAmount, token.decimals)})`
+                          if (isLPToken(token)) {
+                            displayText = `${displayText} - LP Token`
+                          }
+                          return (
+                            <SelectItem
+                              key={token.mint}
+                              value={token.mint}
+                              className='text-sm sm:text-base py-3 cursor-pointer'
+                            >
+                              {displayText}
+                            </SelectItem>
+                          )
+                        })}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage className='text-xs sm:text-sm' />
+                  </FormItem>
+                )}
+              />
 
+              {/* Amount Input */}
+              <FormField
+                control={form.control}
+                name='amount'
+                render={({ field }) => (
+                  <FormItem className='sm:col-span-2'>
+                    <FormLabel className='text-[#E6E6E6] text-sm sm:text-base'>Burn Amount</FormLabel>
+                    <FormControl>
+                      <Input
+                        {...field}
+                        type='number'
+                        step='any'
+                        className='border-[#1E1E24] bg-black/20 text-sm sm:text-base h-12'
+                        placeholder='Enter amount to burn'
+                      />
+                    </FormControl>
+                    <FormMessage className='text-xs sm:text-sm' />
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            {/* Burn Type Selection */}
             <FormField
               control={form.control}
               name='burnType'
@@ -314,21 +308,31 @@ export function BurnForm() {
                     <RadioGroup
                       onValueChange={field.onChange}
                       defaultValue={field.value}
-                      className='flex flex-col sm:flex-row gap-2 sm:gap-4'
+                      className='grid gap-4 sm:grid-cols-2'
                     >
-                      <FormItem className='flex items-center space-x-2'>
+                      <FormItem className='flex items-center space-x-3 space-y-0'>
                         <FormControl>
                           <RadioGroupItem value='INSTANT' />
                         </FormControl>
-                        <FormLabel className='text-[#E6E6E6] text-sm sm:text-base font-normal'>Instant Burn</FormLabel>
+                        <div className='space-y-1'>
+                          <FormLabel className='text-[#E6E6E6] text-sm sm:text-base font-normal flex items-center gap-2'>
+                            <Flame className='w-4 h-4 text-[#14F195]' />
+                            Instant Burn
+                          </FormLabel>
+                          <p className='text-xs text-[#E6E6E6]/60'>Burn tokens immediately</p>
+                        </div>
                       </FormItem>
-                      <FormItem className='flex items-center space-x-2'>
+                      <FormItem className='flex items-center space-x-3 space-y-0'>
                         <FormControl>
                           <RadioGroupItem value='CONTROLLED' />
                         </FormControl>
-                        <FormLabel className='text-[#E6E6E6] text-sm sm:text-base font-normal'>
-                          Controlled Burn
-                        </FormLabel>
+                        <div className='space-y-1'>
+                          <FormLabel className='text-[#E6E6E6] text-sm sm:text-base font-normal flex items-center gap-2'>
+                            <Clock className='w-4 h-4 text-[#9945FF]' />
+                            Controlled Burn
+                          </FormLabel>
+                          <p className='text-xs text-[#E6E6E6]/60'>Schedule burns over time</p>
+                        </div>
                       </FormItem>
                     </RadioGroup>
                   </FormControl>
@@ -337,41 +341,44 @@ export function BurnForm() {
               )}
             />
 
-            <FormField
-              control={form.control}
-              name='message'
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className='text-[#E6E6E6] text-sm sm:text-base'>Message (Optional)</FormLabel>
-                  <FormControl>
-                    <Textarea
-                      {...field}
-                      className='border-[#1E1E24] bg-black/20 text-sm sm:text-base min-h-[80px]'
-                      placeholder='Add a message to your burn transaction'
-                    />
-                  </FormControl>
-                  <FormMessage className='text-xs sm:text-sm' />
-                </FormItem>
-              )}
-            />
-
+            {/* Scheduled Burns */}
             {isControlledBurn && (
-              <div className='space-y-4'>
-                {fields.map((field, index) => (
-                  <div key={field.id} className='flex flex-col sm:flex-row gap-4 items-start'>
-                    <div className='flex-1 space-y-4'>
+              <div className='space-y-4 rounded-lg border border-[#1E1E24] bg-black/20 p-4'>
+                <div className='flex items-center justify-between'>
+                  <h3 className='text-lg font-medium text-[#E6E6E6] flex items-center gap-2'>
+                    <Clock className='w-5 h-5 text-[#9945FF]' />
+                    Scheduled Burns
+                  </h3>
+                  <Button
+                    type='button'
+                    variant='outline'
+                    size='sm'
+                    onClick={() => append({ scheduledFor: new Date(), amount: '' })}
+                    className='border-[#1E1E24] bg-black/20 hover:bg-[#1E1E24] hover:text-[#E6E6E6]'
+                  >
+                    <PlusCircle className='mr-2 h-4 w-4' />
+                    Add Schedule
+                  </Button>
+                </div>
+
+                <div className='space-y-4'>
+                  {fields.map((field, index) => (
+                    <div
+                      key={field.id}
+                      className='grid sm:grid-cols-2 gap-4 items-start rounded-lg border border-[#1E1E24] p-4'
+                    >
                       <FormField
                         control={form.control}
                         name={`scheduledBurns.${index}.scheduledFor`}
                         render={({ field }) => (
-                          <FormItem className='flex flex-col'>
+                          <FormItem>
                             <FormLabel className='text-[#E6E6E6] text-sm sm:text-base'>Date</FormLabel>
                             <Popover>
                               <PopoverTrigger asChild>
                                 <FormControl>
                                   <Button
                                     variant='outline'
-                                    className='border-[#1E1E24] bg-black/20 text-sm sm:text-base h-9 sm:h-10 w-full sm:w-[240px]'
+                                    className='w-full border-[#1E1E24] bg-black/20 text-sm sm:text-base h-12'
                                   >
                                     {field.value ? format(field.value, 'PPP') : <span>Pick a date</span>}
                                     <CalendarIcon className='ml-auto h-4 w-4 opacity-50' />
@@ -393,56 +400,76 @@ export function BurnForm() {
                         )}
                       />
 
-                      <FormField
-                        control={form.control}
-                        name={`scheduledBurns.${index}.amount`}
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel className='text-[#E6E6E6] text-sm sm:text-base'>Amount</FormLabel>
-                            <FormControl>
-                              <Input
-                                {...field}
-                                type='number'
-                                step='any'
-                                className='border-[#1E1E24] bg-black/20 text-sm sm:text-base h-9 sm:h-10'
-                                placeholder='Enter amount'
-                              />
-                            </FormControl>
-                            <FormMessage className='text-xs sm:text-sm' />
-                          </FormItem>
-                        )}
-                      />
+                      <div className='flex gap-2'>
+                        <FormField
+                          control={form.control}
+                          name={`scheduledBurns.${index}.amount`}
+                          render={({ field }) => (
+                            <FormItem className='flex-1'>
+                              <FormLabel className='text-[#E6E6E6] text-sm sm:text-base'>Amount</FormLabel>
+                              <FormControl>
+                                <Input
+                                  {...field}
+                                  type='number'
+                                  step='any'
+                                  className='border-[#1E1E24] bg-black/20 text-sm sm:text-base h-12'
+                                  placeholder='Enter amount'
+                                />
+                              </FormControl>
+                              <FormMessage className='text-xs sm:text-sm' />
+                            </FormItem>
+                          )}
+                        />
+
+                        <Button
+                          type='button'
+                          variant='ghost'
+                          size='icon'
+                          className='mt-8 text-[#E6E6E6]/60 hover:text-red-500 hover:bg-red-500/10'
+                          onClick={() => remove(index)}
+                        >
+                          <Trash2 className='h-4 w-4' />
+                          <span className='sr-only'>Remove schedule</span>
+                        </Button>
+                      </div>
                     </div>
+                  ))}
 
-                    <Button
-                      type='button'
-                      variant='ghost'
-                      size='icon'
-                      className='text-[#E6E6E6]/60 hover:text-[#E6E6E6] hover:bg-[#2E2E34]/50'
-                      onClick={() => remove(index)}
-                    >
-                      <Trash2 className='h-4 w-4' />
-                      <span className='sr-only'>Remove scheduled burn</span>
-                    </Button>
-                  </div>
-                ))}
-
-                <Button
-                  type='button'
-                  variant='outline'
-                  size='sm'
-                  className='border-[#1E1E24] bg-black/20 text-sm sm:text-base h-9 sm:h-10'
-                  onClick={() => append({ scheduledFor: new Date(), amount: '' })}
-                >
-                  <PlusCircle className='mr-2 h-4 w-4' />
-                  Add Schedule
-                </Button>
+                  {fields.length === 0 && (
+                    <div className='text-sm text-[#E6E6E6]/60 text-center py-8 border-2 border-dashed border-[#1E1E24] rounded-lg'>
+                      No burn schedules added. Click "Add Schedule" to create one.
+                    </div>
+                  )}
+                </div>
               </div>
             )}
 
+            {/* Message Input */}
+            <FormField
+              control={form.control}
+              name='message'
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className='text-[#E6E6E6] text-sm sm:text-base flex items-center gap-2'>
+                    <MessageSquare className='w-4 h-4 text-[#E6E6E6]/60' />
+                    Message (Optional)
+                  </FormLabel>
+                  <FormControl>
+                    <Textarea
+                      {...field}
+                      className='border-[#1E1E24] bg-black/20 text-sm sm:text-base min-h-[100px] resize-none'
+                      placeholder='Add a message to your burn transaction'
+                    />
+                  </FormControl>
+                  <FormMessage className='text-xs sm:text-sm' />
+                </FormItem>
+              )}
+            />
+
+            {/* Submit Button */}
             <Button
               type='submit'
-              className='w-full sm:w-auto bg-gradient-to-r from-[#9945FF] to-[#14F195] text-white hover:opacity-90 text-sm sm:text-base h-9 sm:h-10'
+              className='w-full sm:w-auto bg-gradient-to-r from-[#9945FF] to-[#14F195] text-white hover:opacity-90 h-12'
               disabled={isSubmitting}
             >
               {isSubmitting ? (
@@ -451,7 +478,10 @@ export function BurnForm() {
                   Processing...
                 </>
               ) : (
-                'Burn Tokens'
+                <>
+                  <Flame className='mr-2 h-4 w-4' />
+                  Burn Tokens
+                </>
               )}
             </Button>
           </form>
