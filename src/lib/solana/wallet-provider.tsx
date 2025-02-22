@@ -19,8 +19,20 @@ export const SolanaWalletProvider: FC<Props> = ({ children }) => {
     return process.env.NEXT_PUBLIC_RPC_ENDPOINT || 'https://api.mainnet-beta.solana.com'
   }, [])
 
-  // Initialize supported wallets
-  const wallets = useMemo(() => [new PhantomWalletAdapter(), new SolflareWalletAdapter()], [])
+  // Initialize supported wallets with mobile configuration
+  const wallets = useMemo(
+    () => [
+      new PhantomWalletAdapter({
+        appIdentity: {
+          name: 'ControlledBurn',
+          icon: 'https://controlledburn-mx4k.vercel.app/logo.svg', // Make sure this matches your actual logo URL
+          url: 'https://controlledburn-mx4k.vercel.app' // Make sure this matches your actual domain
+        }
+      }),
+      new SolflareWalletAdapter()
+    ],
+    []
+  )
 
   return (
     <ConnectionProvider endpoint={endpoint}>
