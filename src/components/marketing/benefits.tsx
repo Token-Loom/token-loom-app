@@ -10,8 +10,9 @@ const benefits = [
     gradient: 'from-[#9945FF]/10 to-transparent'
   },
   {
-    title: 'Instant & Controlled Burns',
-    description: 'Choose between immediate burns or scheduled, controlled burns for both regular and LP tokens.',
+    title: 'Controlled Burns (Coming Soon)',
+    description:
+      'Schedule your burns over time with our upcoming controlled burn feature. Perfect for strategic token supply management.',
     icon: Clock,
     gradient: 'from-[#14F195]/10 to-transparent'
   },
@@ -43,12 +44,12 @@ const benefits = [
 
 export function Benefits() {
   return (
-    <div className='container py-12 sm:py-24 px-4 sm:px-6'>
+    <div className='container mt-[140px] sm:mt-[240px]'>
       <div className='mx-auto max-w-2xl text-center'>
         <h2 className='font-display mb-3 sm:mb-4 text-2xl sm:text-3xl font-bold tracking-tight text-[#E6E6E6] md:text-4xl'>
           Platform Benefits
         </h2>
-        <p className='text-base sm:text-lg text-[#E6E6E6]/60'>
+        <p className='text-base max-w-2xl mx-auto sm:text-lg text-[#E6E6E6]/60'>
           Advanced features for secure and efficient token burning, supporting both regular and LP tokens.
         </p>
       </div>

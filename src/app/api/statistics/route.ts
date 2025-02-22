@@ -1,13 +1,15 @@
 import { NextResponse } from 'next/server'
-import { prisma } from '@/lib/prisma'
+import { prisma, executeWithRetry } from '@/lib/prisma'
 
 export async function GET() {
   try {
     // Get global statistics
-    const globalStats = await prisma.globalStatistic.findFirst({
-      where: { id: '1' },
-      orderBy: { lastUpdated: 'desc' }
-    })
+    const globalStats = await executeWithRetry(() =>
+      prisma.globalStatistic.findFirst({
+        where: { id: '1' },
+        orderBy: { lastUpdated: 'desc' }
+      })
+    )
 
     return NextResponse.json({
       success: true,

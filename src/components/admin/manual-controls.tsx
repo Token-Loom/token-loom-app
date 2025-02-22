@@ -135,10 +135,10 @@ export function ManualControls() {
 
   return (
     <div className='grid gap-4 md:grid-cols-2'>
-      <Card>
+      <Card className='bg-black/20 border-[#2E2E34]'>
         <CardHeader>
-          <CardTitle>System Control</CardTitle>
-          <CardDescription>Control the burn execution system</CardDescription>
+          <CardTitle className='text-lg text-[#E6E6E6]'>System Control</CardTitle>
+          <CardDescription className='text-[#E6E6E6]/60'>Control the burn execution system</CardDescription>
         </CardHeader>
         <CardContent className='space-y-4'>
           <div className='flex items-center gap-4'>
@@ -146,6 +146,7 @@ export function ManualControls() {
               variant={status.isRunning ? 'destructive' : 'default'}
               onClick={handleToggleSystem}
               disabled={isLoading}
+              className='bg-[#9945FF] hover:bg-[#9945FF]/90 text-[#E6E6E6]'
             >
               {isLoading ? (
                 <Loader2 className='mr-2 h-4 w-4 animate-spin' />
@@ -157,24 +158,29 @@ export function ManualControls() {
               {status.isRunning ? 'Pause System' : 'Resume System'}
             </Button>
 
-            <Button variant='outline' onClick={handleSyncNow} disabled={isLoading || !status.isRunning}>
+            <Button
+              variant='outline'
+              onClick={handleSyncNow}
+              disabled={isLoading || !status.isRunning}
+              className='border-[#2E2E34] text-[#E6E6E6] hover:bg-[#2E2E34]'
+            >
               <RefreshCw className='mr-2 h-4 w-4' />
               Sync Now
             </Button>
 
-            {isStatusLoading && <Loader2 className='h-4 w-4 animate-spin text-muted-foreground' />}
+            {isStatusLoading && <Loader2 className='h-4 w-4 animate-spin text-[#9945FF]' />}
           </div>
 
           {status.lastSyncTime && (
-            <p className='text-sm text-muted-foreground'>Last sync: {status.lastSyncTime.toLocaleString()}</p>
+            <p className='text-sm text-[#E6E6E6]/60'>Last sync: {status.lastSyncTime.toLocaleString()}</p>
           )}
         </CardContent>
       </Card>
 
-      <Card>
+      <Card className='bg-black/20 border-[#2E2E34]'>
         <CardHeader>
-          <CardTitle>System Configuration</CardTitle>
-          <CardDescription>Configure system parameters</CardDescription>
+          <CardTitle className='text-lg text-[#E6E6E6]'>System Configuration</CardTitle>
+          <CardDescription className='text-[#E6E6E6]/60'>Configure system parameters</CardDescription>
         </CardHeader>
         <CardContent className='space-y-4'>
           {isConfigLoading ? (
@@ -184,7 +190,9 @@ export function ManualControls() {
           ) : (
             <>
               <div className='space-y-2'>
-                <Label htmlFor='maxRetries'>Maximum Retries</Label>
+                <Label htmlFor='maxRetries' className='text-[#E6E6E6]'>
+                  Maximum Retries
+                </Label>
                 <Input
                   id='maxRetries'
                   type='number'
@@ -192,11 +200,14 @@ export function ManualControls() {
                   onChange={e => setMaxRetries(e.target.value)}
                   min='0'
                   max='10'
+                  className='bg-black/20 border-[#2E2E34] text-[#E6E6E6]'
                 />
               </div>
 
               <div className='space-y-2'>
-                <Label htmlFor='retryDelay'>Retry Delay (seconds)</Label>
+                <Label htmlFor='retryDelay' className='text-[#E6E6E6]'>
+                  Retry Delay (seconds)
+                </Label>
                 <Input
                   id='retryDelay'
                   type='number'
@@ -204,10 +215,15 @@ export function ManualControls() {
                   onChange={e => setRetryDelay(e.target.value)}
                   min='60'
                   max='3600'
+                  className='bg-black/20 border-[#2E2E34] text-[#E6E6E6]'
                 />
               </div>
 
-              <Button onClick={handleUpdateConfig} disabled={isLoading} className='w-full'>
+              <Button
+                onClick={handleUpdateConfig}
+                disabled={isLoading}
+                className='w-full bg-[#9945FF] hover:bg-[#9945FF]/90 text-[#E6E6E6]'
+              >
                 {isLoading ? (
                   <>
                     <Loader2 className='mr-2 h-4 w-4 animate-spin' />

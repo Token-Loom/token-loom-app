@@ -15,14 +15,13 @@ import { BurnFormData, burnFormSchema } from '@/lib/types/burn'
 import { CalendarIcon, PlusCircle, Trash2, Flame, Clock, MessageSquare } from 'lucide-react'
 import { Calendar } from '@/components/ui/calendar'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
-import { cn, formatTokenAmount } from '@/lib/utils'
+import { formatTokenAmount } from '@/lib/utils'
 import { format } from 'date-fns'
 import { useState } from 'react'
 import { burnTokens } from '@/lib/solana/burn'
 import { useToast } from '@/hooks/use-toast'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Loader2 } from 'lucide-react'
-import { isAdminWallet } from '@/lib/solana/admin-config'
 import { burnLPTokens } from '@/lib/solana/lp-burn'
 import { TokenType, LPTokenInfo } from '@/lib/types/burn'
 
@@ -39,8 +38,6 @@ export function BurnForm() {
   const [burnStatus, setBurnStatus] = useState<string | null>(null)
   const [txSignature, setTxSignature] = useState<string | null>(null)
   const { toast } = useToast()
-  const isAdmin = publicKey ? isAdminWallet(publicKey) : false
-  const [selectedToken, setSelectedToken] = useState<TokenType | null>(null)
 
   const form = useForm<BurnFormData>({
     resolver: zodResolver(burnFormSchema),
@@ -138,11 +135,26 @@ export function BurnForm() {
           burnType: data.burnType,
           message: data.message,
           userWallet: publicKey.toString(),
-          scheduledBurns: data.scheduledBurns
+          scheduledBurns: data.scheduledBurns,
+          signature
         })
       })
 
       const result = await response.json()
+      console.log('API Response:', {
+        status: response.status,
+        result,
+        requestBody: {
+          tokenMint: data.tokenMint,
+          tokenName: token.name,
+          tokenSymbol: token.symbol,
+          amount: data.amount,
+          burnType: data.burnType,
+          userWallet: publicKey.toString(),
+          signature
+        }
+      })
+
       if (!result.success) {
         throw new Error(result.error || 'Failed to create burn transaction')
       }
@@ -240,8 +252,6 @@ export function BurnForm() {
                     <Select
                       onValueChange={value => {
                         field.onChange(value)
-                        const token = tokens.find(t => t.mint === value)
-                        setSelectedToken(token || null)
                       }}
                       value={field.value}
                     >
@@ -322,7 +332,7 @@ export function BurnForm() {
                           <p className='text-xs text-[#E6E6E6]/60'>Burn tokens immediately</p>
                         </div>
                       </FormItem>
-                      <FormItem className='flex items-center space-x-3 space-y-0'>
+                      {/* <FormItem className='flex items-center space-x-3 space-y-0'>
                         <FormControl>
                           <RadioGroupItem value='CONTROLLED' />
                         </FormControl>
@@ -333,7 +343,7 @@ export function BurnForm() {
                           </FormLabel>
                           <p className='text-xs text-[#E6E6E6]/60'>Schedule burns over time</p>
                         </div>
-                      </FormItem>
+                      </FormItem> */}
                     </RadioGroup>
                   </FormControl>
                   <FormMessage className='text-xs sm:text-sm' />
@@ -437,7 +447,7 @@ export function BurnForm() {
 
                   {fields.length === 0 && (
                     <div className='text-sm text-[#E6E6E6]/60 text-center py-8 border-2 border-dashed border-[#1E1E24] rounded-lg'>
-                      No burn schedules added. Click "Add Schedule" to create one.
+                      No burn schedules added. Click &quot;Add Schedule&quot; to create one.
                     </div>
                   )}
                 </div>

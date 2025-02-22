@@ -47,30 +47,44 @@ export default function Home() {
           })
         }}
       />
-      <main className='min-h-screen bg-[#13141F]'>
-        <header>
-          <Banner />
-        </header>
-        <article>
-          <section id='fees'>
-            <Fees />
-          </section>
-          <section id='statistics' aria-label='Burn Statistics'>
-            <BurnStatistics />
-          </section>
-          <section id='how-it-works' aria-label='How It Works'>
-            <HowItWorks />
-          </section>
-          <section id='benefits' aria-label='Benefits'>
-            <Benefits />
-          </section>
-          <section id='transparency' aria-label='Transparency'>
-            <Transparency />
-          </section>
-          <section id='faq' aria-label='Frequently Asked Questions'>
-            <FAQ />
-          </section>
-        </article>
+      <main className='min-h-screen bg-[#13141F] relative'>
+        {/* Subtle background pattern */}
+        <div className='fixed inset-0 bg-[linear-gradient(45deg,_#9945FF05_1px,transparent_1px),linear-gradient(-45deg,_#14F19505_1px,transparent_1px)] bg-[size:48px_48px]' />
+
+        {/* Single subtle gradient */}
+        <div className='fixed inset-0 bg-gradient-to-b from-[#9945FF]/5 via-transparent to-[#14F195]/5 pointer-events-none' />
+
+        {/* Content */}
+        <div className='relative'>
+          <header className='relative z-20'>
+            <Banner />
+          </header>
+          <article className='relative z-10'>
+            <div className='space-y-24 sm:space-y-32'>
+              <section id='fees'>
+                <Fees />
+              </section>
+              <section id='statistics' aria-label='Burn Statistics'>
+                <BurnStatistics />
+              </section>
+              <section id='how-it-works' aria-label='How It Works'>
+                <HowItWorks />
+              </section>
+              <section id='benefits' aria-label='Benefits'>
+                <Benefits />
+              </section>
+              <section id='transparency' aria-label='Transparency'>
+                <Transparency />
+              </section>
+              <section id='faq' aria-label='Frequently Asked Questions'>
+                <FAQ />
+              </section>
+            </div>
+          </article>
+        </div>
+
+        {/* Single subtle divider */}
+        <div className='absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-[#9945FF]/20 to-transparent' />
       </main>
     </>
   )

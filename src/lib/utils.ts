@@ -8,11 +8,14 @@ export function truncateAddress(address: string, startLength = 4, endLength = 4)
   return `${address.slice(0, startLength)}...${address.slice(-endLength)}`
 }
 
-export function formatTokenAmount(amount: number, decimals: number = 9): string {
-  if (amount === 0) return '0'
+export function formatTokenAmount(amount: number | string, decimals: number = 9): string {
+  if (amount === 0 || amount === '0') return '0'
+
+  // Convert string to number if needed
+  const numericAmount = typeof amount === 'string' ? parseFloat(amount) : amount
 
   // For very large numbers, we want to avoid scientific notation
-  const fullNumber = amount.toFixed(decimals)
+  const fullNumber = numericAmount.toFixed(decimals)
 
   // Split into integer and decimal parts
   const [integerPart, decimalPart] = fullNumber.split('.')

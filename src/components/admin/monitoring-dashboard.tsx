@@ -100,10 +100,10 @@ export function MonitoringDashboard() {
   return (
     <div className='space-y-8'>
       <div className='grid gap-4 md:grid-cols-2 lg:grid-cols-4'>
-        <Card className='bg-[#1E1E24] border-[#2E2E34]'>
-          <CardHeader>
-            <CardTitle className='text-[#E6E6E6]'>System Status</CardTitle>
-            <CardDescription>Current system state</CardDescription>
+        <Card className='bg-black/20 border-[#2E2E34]'>
+          <CardHeader className='pb-2'>
+            <CardTitle className='text-lg text-[#E6E6E6]'>System Status</CardTitle>
+            <CardDescription className='text-[#E6E6E6]/60'>Current system state</CardDescription>
           </CardHeader>
           <CardContent>
             <div className='flex items-center gap-2'>
@@ -113,30 +113,30 @@ export function MonitoringDashboard() {
           </CardContent>
         </Card>
 
-        <Card className='bg-[#1E1E24] border-[#2E2E34]'>
-          <CardHeader>
-            <CardTitle className='text-[#E6E6E6]'>Active Workers</CardTitle>
-            <CardDescription>Currently running burn workers</CardDescription>
+        <Card className='bg-black/20 border-[#2E2E34]'>
+          <CardHeader className='pb-2'>
+            <CardTitle className='text-lg text-[#E6E6E6]'>Active Workers</CardTitle>
+            <CardDescription className='text-[#E6E6E6]/60'>Currently running burn workers</CardDescription>
           </CardHeader>
           <CardContent>
             <div className='text-2xl font-bold text-[#14F195]'>{systemStatus.activeWorkers}</div>
           </CardContent>
         </Card>
 
-        <Card className='bg-[#1E1E24] border-[#2E2E34]'>
-          <CardHeader>
-            <CardTitle className='text-[#E6E6E6]'>Pending Transactions</CardTitle>
-            <CardDescription>Transactions waiting to be processed</CardDescription>
+        <Card className='bg-black/20 border-[#2E2E34]'>
+          <CardHeader className='pb-2'>
+            <CardTitle className='text-lg text-[#E6E6E6]'>Pending Transactions</CardTitle>
+            <CardDescription className='text-[#E6E6E6]/60'>Transactions waiting to be processed</CardDescription>
           </CardHeader>
           <CardContent>
             <div className='text-2xl font-bold text-[#00C2FF]'>{systemStatus.pendingTransactions}</div>
           </CardContent>
         </Card>
 
-        <Card className='bg-[#1E1E24] border-[#2E2E34]'>
-          <CardHeader>
-            <CardTitle className='text-[#E6E6E6]'>Failed Transactions</CardTitle>
-            <CardDescription>Transactions that need attention</CardDescription>
+        <Card className='bg-black/20 border-[#2E2E34]'>
+          <CardHeader className='pb-2'>
+            <CardTitle className='text-lg text-[#E6E6E6]'>Failed Transactions</CardTitle>
+            <CardDescription className='text-[#E6E6E6]/60'>Transactions that need attention</CardDescription>
           </CardHeader>
           <CardContent>
             <div className='text-2xl font-bold text-[#FF8F00]'>{systemStatus.failedTransactions}</div>
@@ -144,10 +144,10 @@ export function MonitoringDashboard() {
         </Card>
       </div>
 
-      <Card className='bg-[#1E1E24] border-[#2E2E34]'>
+      <Card className='bg-black/20 border-[#2E2E34]'>
         <CardHeader>
-          <CardTitle className='text-[#E6E6E6]'>Recent Executions</CardTitle>
-          <CardDescription>Latest burn execution attempts</CardDescription>
+          <CardTitle className='text-lg text-[#E6E6E6]'>Recent Executions</CardTitle>
+          <CardDescription className='text-[#E6E6E6]/60'>Latest burn execution attempts</CardDescription>
         </CardHeader>
         <CardContent>
           <DataTable columns={executionColumns} data={executions} pageSize={10} />

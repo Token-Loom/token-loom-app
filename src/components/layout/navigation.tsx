@@ -27,8 +27,7 @@ export function Navigation() {
       <div className='container flex h-16 items-center justify-between'>
         <div className='flex items-center gap-6'>
           <Link href='/' className='flex items-center gap-2'>
-            <Image src='/logo.svg' alt='Logo' width={32} height={32} />
-            <span className='font-bold text-lg'>ControlledBurn</span>
+            <Image src='/logo.svg' alt='Logo' width={44} height={44} />
           </Link>
 
           {/* Desktop Navigation */}

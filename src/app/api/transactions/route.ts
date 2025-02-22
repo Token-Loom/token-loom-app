@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { prisma } from '@/lib/prisma'
+import { prisma, executeWithRetry } from '@/lib/prisma'
 import { BurnStatus } from '@prisma/client'
 
 export async function GET(request: Request) {
@@ -27,13 +27,15 @@ export async function GET(request: Request) {
     }
 
     const [transactions, total] = await Promise.all([
-      prisma.burnTransaction.findMany({
-        where,
-        orderBy: { createdAt: 'desc' },
-        skip: (page - 1) * limit,
-        take: limit
-      }),
-      prisma.burnTransaction.count({ where })
+      executeWithRetry(() =>
+        prisma.burnTransaction.findMany({
+          where,
+          orderBy: { createdAt: 'desc' },
+          skip: (page - 1) * limit,
+          take: limit
+        })
+      ),
+      executeWithRetry(() => prisma.burnTransaction.count({ where }))
     ])
 
     return NextResponse.json({

@@ -13,14 +13,6 @@ export interface BurnTokenParams {
   onProgress?: (status: string | null) => void
 }
 
-interface ParsedTokenAccountData {
-  info: {
-    mint: {
-      decimals: number
-    }
-  }
-}
-
 export async function burnTokens({
   connection,
   tokenMint,
@@ -65,24 +57,44 @@ export async function burnTokens({
       throw new Error('Token account not found')
     }
 
-    const parsedData = (tokenAccountInfo.value.data as ParsedAccountData).parsed as ParsedTokenAccountData
-    const decimals = parsedData.info.mint.decimals
+    const parsedData = (tokenAccountInfo.value.data as ParsedAccountData).parsed
+    if (!parsedData || typeof parsedData !== 'object') {
+      throw new Error('Invalid token account data format')
+    }
+
+    // Ensure we correctly access the decimals from the parsed data
+    const decimals = (parsedData as any).info.tokenAmount.decimals
+    if (typeof decimals !== 'number') {
+      throw new Error('Could not determine token decimals')
+    }
+
+    console.log('Token account data:', {
+      parsedData,
+      decimals
+    })
 
     // Convert amount to raw amount based on decimals
-    // Handle decimal places carefully to avoid floating point precision issues
-    const parts = amount.split('.')
-    const wholePart = parts[0]
-    const fractionalPart = parts[1] || ''
+    // Handle the amount as a string to avoid floating point precision issues
+    let [wholePart, decimalPart = ''] = amount.split('.')
 
-    // Pad or truncate decimal places as needed
-    const paddedFractionalPart = fractionalPart.padEnd(decimals, '0').slice(0, decimals)
+    // Remove any leading zeros from the whole part
+    wholePart = wholePart.replace(/^0+/, '') || '0'
 
-    // Combine whole and fractional parts
-    const rawAmountStr = wholePart + paddedFractionalPart
+    // Pad or truncate decimal part to match decimals
+    decimalPart = decimalPart.padEnd(decimals, '0').slice(0, decimals)
 
-    // Remove any leading zeros to avoid BigInt conversion issues
-    const cleanedAmountStr = rawAmountStr.replace(/^0+/, '') || '0'
-    const rawAmount = BigInt(cleanedAmountStr)
+    // Combine whole and decimal parts
+    const rawAmountStr = `${wholePart}${decimalPart}`
+
+    // Convert to BigInt, removing any leading zeros
+    const rawAmount = BigInt(rawAmountStr)
+
+    console.log({
+      inputAmount: amount,
+      decimals,
+      rawAmountStr,
+      rawAmount: rawAmount.toString()
+    })
 
     // Create burn instruction
     const burnInstruction = createBurnInstruction(tokenAccount, mintPubkey, wallet, rawAmount)

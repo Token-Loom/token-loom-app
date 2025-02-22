@@ -32,7 +32,6 @@ export function BurnScheduleManager() {
   const [schedules, setSchedules] = useState<ScheduledBurn[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<{ message: string; details?: string } | null>(null)
-  const [retryCount, setRetryCount] = useState(0)
   const maxRetries = 3
   const retryDelay = 2000 // 2 seconds
 
@@ -44,7 +43,6 @@ export function BurnScheduleManager() {
 
       if (response.ok) {
         setSchedules(data)
-        setRetryCount(0) // Reset retry count on success
       } else {
         // If it's a temporary error (like prepared statement error), retry
         if (data.details?.includes('prepared statement') && currentRetry < maxRetries) {
@@ -203,17 +201,22 @@ export function BurnScheduleManager() {
   ]
 
   return (
-    <Card>
+    <Card className='bg-black/20 border-[#2E2E34]'>
       <CardHeader>
-        <CardTitle>Burn Schedules</CardTitle>
-        <CardDescription>Manage scheduled token burns</CardDescription>
+        <CardTitle className='text-lg text-[#E6E6E6]'>Burn Schedules</CardTitle>
+        <CardDescription className='text-[#E6E6E6]/60'>Manage scheduled token burns</CardDescription>
       </CardHeader>
       <CardContent>
         {error ? (
-          <Alert variant={error.message.includes('retrying') ? 'default' : 'destructive'}>
+          <Alert
+            variant={error.message.includes('retrying') ? 'default' : 'destructive'}
+            className='bg-black/20 border-[#2E2E34]'
+          >
             <AlertCircle className='h-4 w-4' />
-            <AlertTitle>{error.message.includes('retrying') ? 'Reconnecting...' : 'Error'}</AlertTitle>
-            <AlertDescription>
+            <AlertTitle className='text-[#E6E6E6]'>
+              {error.message.includes('retrying') ? 'Reconnecting...' : 'Error'}
+            </AlertTitle>
+            <AlertDescription className='text-[#E6E6E6]/60'>
               {error.message}
               {error.details && <div className='mt-2 text-sm text-[#A3A3A3]'>{error.details}</div>}
             </AlertDescription>

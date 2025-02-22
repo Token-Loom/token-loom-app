@@ -53,7 +53,7 @@ export function Banner() {
           >
             The most secure and transparent way to burn Solana tokens.
             <br className='hidden sm:block' />
-            Supports both regular tokens and LP tokens with advanced scheduling.
+            Instant burns available now, controlled burns coming soon!
           </motion.p>
 
           <motion.div

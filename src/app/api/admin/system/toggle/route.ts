@@ -1,52 +1,52 @@
 import { NextResponse } from 'next/server'
-import { prisma } from '@/lib/prisma'
+import { prisma, executeWithRetry } from '@/lib/prisma'
 
 const CONFIG_ID = '1'
 
 // Ensure initial configuration exists
 async function ensureConfig() {
   try {
-    const config = await prisma.systemConfig.upsert({
-      where: { id: CONFIG_ID },
-      update: {},
-      create: {
-        id: CONFIG_ID,
-        maxRetries: 3,
-        retryDelay: 300,
-        maxWorkers: 10,
-        isRunning: true
-      }
-    })
+    const config = await executeWithRetry(() =>
+      prisma.systemConfig.upsert({
+        where: { id: CONFIG_ID },
+        update: {},
+        create: {
+          id: CONFIG_ID,
+          maxRetries: 3,
+          retryDelay: 300,
+          maxWorkers: 10,
+          isRunning: true
+        }
+      })
+    )
     return config
   } catch (error) {
     throw error
   }
 }
 
-export async function POST(request: Request) {
+export async function POST() {
   try {
-    const { action } = await request.json()
+    // Get current config
+    const currentConfig = await ensureConfig()
 
-    if (action !== 'pause' && action !== 'resume') {
-      return NextResponse.json({ error: 'Invalid action' }, { status: 400 })
-    }
-    // Update system status
-    const config = await prisma.systemConfig.update({
-      where: { id: CONFIG_ID },
-      data: {
-        isRunning: action === 'resume'
-      }
-    })
-
-    return NextResponse.json({ isRunning: config.isRunning })
-  } catch (error) {
-    return NextResponse.json(
-      {
-        error: 'Failed to toggle system',
-        details: error instanceof Error ? error.message : 'Unknown error'
-      },
-      { status: 500 }
+    // Toggle system status
+    const updatedConfig = await executeWithRetry(() =>
+      prisma.systemConfig.update({
+        where: { id: CONFIG_ID },
+        data: {
+          isRunning: !currentConfig.isRunning
+        }
+      })
     )
+
+    return NextResponse.json({
+      success: true,
+      isRunning: updatedConfig.isRunning
+    })
+  } catch (error) {
+    console.error('Error toggling system status:', error)
+    return NextResponse.json({ error: 'Failed to toggle system status' }, { status: 500 })
   }
 }
 

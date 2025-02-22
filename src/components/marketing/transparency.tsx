@@ -1,6 +1,10 @@
+'use client'
+
 import { Card } from '@/components/ui/card'
 import { GithubIcon, ShieldCheckIcon } from 'lucide-react'
 import Link from 'next/link'
+import { motion } from 'framer-motion'
+import { useInView } from 'react-intersection-observer'
 
 const features = [
   {
@@ -9,76 +13,85 @@ const features = [
       'Our entire codebase is publicly available on GitHub, allowing anyone to inspect, verify, and contribute to the project.',
     icon: GithubIcon,
     link: 'https://github.com/yourusername/controlledburn',
-    gradient: 'from-[#9945FF] to-[#14F195]',
-    cardGradient: 'from-[#9945FF]/5 via-transparent to-transparent'
+    color: '#9945FF'
   },
   {
     title: 'Verifiable Transactions',
     description:
       'Every burn transaction is recorded on the Solana blockchain, providing permanent and transparent proof of token burns.',
     icon: ShieldCheckIcon,
-    gradient: 'from-[#14F195] to-[#00C2FF]',
-    cardGradient: 'from-[#14F195]/5 via-transparent to-transparent'
+    color: '#14F195'
   }
 ]
 
 export function Transparency() {
+  const [ref, inView] = useInView({
+    triggerOnce: true,
+    threshold: 0.1
+  })
+
   return (
-    <section className='relative bg-[#1E1E24] py-12 sm:py-24'>
-      <div className='absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-[#14F195]/10 via-[#9945FF]/5 to-transparent opacity-60' />
-      <div className='absolute inset-0 bg-[linear-gradient(45deg,_#14F19505_1px,transparent_1px),linear-gradient(-45deg,_#9945FF05_1px,transparent_1px)] bg-[size:32px_32px]' />
-      <div className='container relative px-4 sm:px-6'>
-        <div className='mx-auto max-w-6xl backdrop-blur-sm'>
+    <section className='mt-[140px] sm:mt-[240px]'>
+      <div className='container relative'>
+        <motion.div
+          ref={ref}
+          initial={{ opacity: 0 }}
+          animate={inView ? { opacity: 1 } : {}}
+          transition={{ duration: 0.6 }}
+          className='mx-auto max-w-4xl'
+        >
           <div className='text-center'>
-            <h2 className='font-display mb-3 sm:mb-4 text-2xl sm:text-3xl font-bold text-[#E6E6E6] md:text-4xl'>
+            <h2 className='font-display mb-2 sm:mb-4 text-2xl sm:text-3xl font-bold md:text-4xl'>
               Built on{' '}
-              <span className='bg-gradient-to-r from-[#9945FF] via-[#14F195] to-[#00C2FF] bg-clip-text text-transparent'>
+              <span className='bg-gradient-to-r from-[#9945FF] to-[#14F195] bg-clip-text text-transparent'>
                 Transparency
               </span>
             </h2>
-            <p className='mx-auto max-w-2xl text-sm sm:text-base text-[#A3A3A3]'>
+            <p className='text-base max-w-2xl mx-auto sm:text-lg text-[#E6E6E6]/60'>
               We believe in complete transparency. Our platform is open source, our transactions are verifiable, and our
               processes are public.
             </p>
           </div>
 
-          <div className='mt-8 sm:mt-16 grid gap-4 sm:gap-8 grid-cols-1 sm:grid-cols-2'>
-            {features.map(feature => {
+          <div className='mt-6 sm:mt-10 grid gap-4 grid-cols-1 sm:grid-cols-2'>
+            {features.map((feature, index) => {
               const Icon = feature.icon
               return (
-                <Card
+                <motion.div
                   key={feature.title}
-                  className='group relative overflow-hidden border-0 bg-[#1A1B23] p-4 sm:p-6 transition-all duration-500'
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={inView ? { opacity: 1, y: 0 } : {}}
+                  transition={{ delay: 0.2 + index * 0.1, duration: 0.4 }}
                 >
-                  <div className={`absolute inset-0 bg-gradient-to-br ${feature.cardGradient}`} />
-                  <div className='absolute inset-0 bg-gradient-to-b from-white/[0.05] to-transparent' />
-                  <div className='relative'>
-                    <div className='mb-3 sm:mb-4 inline-flex h-10 w-10 sm:h-12 sm:w-12 items-center justify-center rounded-lg shadow-lg relative'>
-                      <div className={`absolute inset-0 rounded-lg bg-gradient-to-r ${feature.gradient}`} />
-                      <div className='absolute inset-0 rounded-lg bg-black/40' />
-                      <Icon className='h-5 w-5 sm:h-6 sm:w-6 text-white relative z-10' />
-                    </div>
-                    <h3 className='relative mb-2 text-lg sm:text-xl font-semibold text-[#E6E6E6]'>{feature.title}</h3>
-                    <p className='relative text-sm sm:text-base text-[#A3A3A3]'>{feature.description}</p>
-                    {feature.link && (
-                      <Link
-                        href={feature.link}
-                        target='_blank'
-                        rel='noopener noreferrer'
-                        className='relative mt-3 sm:mt-4 inline-flex items-center text-[#14F195] text-sm sm:text-base hover:underline'
+                  <Card className='group relative overflow-hidden border border-white/5 bg-[#1A1B23] p-4 transition-all duration-300 hover:border-white/10 h-full'>
+                    <div className='relative flex flex-col h-full'>
+                      <div
+                        className='mb-3 inline-flex h-8 w-8 sm:h-10 sm:w-10 items-center justify-center rounded-lg'
+                        style={{ backgroundColor: `${feature.color}10` }}
                       >
-                        View on GitHub
-                        <span className='ml-1 transition-transform group-hover:translate-x-1'>→</span>
-                      </Link>
-                    )}
-                  </div>
-                </Card>
+                        <Icon className='h-4 w-4 sm:h-5 sm:w-5' style={{ color: feature.color }} />
+                      </div>
+                      <h3 className='mb-1.5 text-base sm:text-lg font-semibold text-[#E6E6E6]'>{feature.title}</h3>
+                      <p className='text-sm text-[#A3A3A3] flex-grow'>{feature.description}</p>
+                      {feature.link && (
+                        <Link
+                          href={feature.link}
+                          target='_blank'
+                          rel='noopener noreferrer'
+                          className='mt-3 inline-flex items-center text-[#14F195] text-sm hover:underline'
+                        >
+                          View on GitHub
+                          <span className='ml-1 transition-transform group-hover:translate-x-1'>→</span>
+                        </Link>
+                      )}
+                    </div>
+                  </Card>
+                </motion.div>
               )
             })}
           </div>
-        </div>
+        </motion.div>
       </div>
-      <div className='absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-[#14F195]/20 to-transparent' />
     </section>
   )
 }

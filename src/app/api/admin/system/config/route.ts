@@ -1,21 +1,23 @@
 import { NextResponse } from 'next/server'
-import { prisma } from '@/lib/prisma'
+import { prisma, executeWithRetry } from '@/lib/prisma'
 
 const CONFIG_ID = '1' // Use a constant ID for the single config record
 
 export async function GET() {
   try {
-    const config = await prisma.systemConfig.upsert({
-      where: { id: CONFIG_ID },
-      update: {},
-      create: {
-        id: CONFIG_ID,
-        maxRetries: 3,
-        retryDelay: 300,
-        maxWorkers: 10,
-        isRunning: true
-      }
-    })
+    const config = await executeWithRetry(() =>
+      prisma.systemConfig.upsert({
+        where: { id: CONFIG_ID },
+        update: {},
+        create: {
+          id: CONFIG_ID,
+          maxRetries: 3,
+          retryDelay: 300,
+          maxWorkers: 10,
+          isRunning: true
+        }
+      })
+    )
 
     return NextResponse.json(config)
   } catch (error) {
@@ -26,35 +28,19 @@ export async function GET() {
 
 export async function POST(request: Request) {
   try {
-    const { maxRetries, retryDelay } = await request.json()
+    const body = await request.json()
+    const { maxRetries, retryDelay, maxWorkers } = body
 
-    // Validate input
-    if (
-      typeof maxRetries !== 'number' ||
-      typeof retryDelay !== 'number' ||
-      maxRetries < 0 ||
-      maxRetries > 10 ||
-      retryDelay < 60 ||
-      retryDelay > 3600
-    ) {
-      return NextResponse.json({ error: 'Invalid configuration values' }, { status: 400 })
-    }
-
-    // Update configuration
-    const config = await prisma.systemConfig.upsert({
-      where: { id: CONFIG_ID },
-      update: {
-        maxRetries,
-        retryDelay
-      },
-      create: {
-        id: CONFIG_ID,
-        maxRetries,
-        retryDelay,
-        maxWorkers: 10,
-        isRunning: true
-      }
-    })
+    const config = await executeWithRetry(() =>
+      prisma.systemConfig.update({
+        where: { id: CONFIG_ID },
+        data: {
+          maxRetries: maxRetries ? parseInt(maxRetries) : undefined,
+          retryDelay: retryDelay ? parseInt(retryDelay) : undefined,
+          maxWorkers: maxWorkers ? parseInt(maxWorkers) : undefined
+        }
+      })
+    )
 
     return NextResponse.json(config)
   } catch (error) {
