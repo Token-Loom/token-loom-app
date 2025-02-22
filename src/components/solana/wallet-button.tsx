@@ -87,25 +87,31 @@ export function WalletButton({ className }: WalletButtonProps) {
         sessionStorage.setItem('phantom_session', response.session)
         setSession(response.session)
 
-        // Update wallet adapter state by connecting through provider
-        const provider = getPhantomProvider()
-
-        if (provider) {
-          addDebugLog('Connecting to provider...')
-          provider
-            .connect()
-            .then(() => {
-              addDebugLog('Connected successfully')
-            })
-            .catch(error => {
-              addDebugLog(`Error: ${error.message}`)
-              // Clear session if connection fails
-              sessionStorage.removeItem('phantom_session')
-              setSession(null)
-            })
-        } else {
-          addDebugLog('No provider found')
+        // Wait for Phantom provider to be available
+        const checkAndConnect = async () => {
+          addDebugLog('Waiting for Phantom provider...')
+          // Try for up to 5 seconds
+          for (let i = 0; i < 10; i++) {
+            const provider = getPhantomProvider()
+            if (provider) {
+              addDebugLog('Found provider, connecting...')
+              try {
+                await provider.connect()
+                addDebugLog('Connected successfully')
+                // Force a refresh of isPhantomAvailable
+                setIsPhantomAvailable(true)
+                return
+              } catch (error) {
+                addDebugLog(`Connection error: ${error instanceof Error ? error.message : 'Unknown error'}`)
+              }
+            }
+            // Wait 500ms before trying again
+            await new Promise(resolve => setTimeout(resolve, 500))
+          }
+          addDebugLog('Failed to find Phantom provider after timeout')
         }
+
+        checkAndConnect()
       } else {
         addDebugLog('Failed to handle response')
       }
