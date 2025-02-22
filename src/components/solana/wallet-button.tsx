@@ -32,8 +32,10 @@ export function WalletButton({ className }: WalletButtonProps) {
   useEffect(() => {
     setIsPhantomAvailable(checkForPhantom())
     setIsMobile(isMobileDevice())
+    addDebugLog('Debug overlay active')
     addDebugLog(`Device: ${isMobileDevice() ? 'Mobile' : 'Desktop'}`)
     addDebugLog(`Phantom Available: ${checkForPhantom()}`)
+    addDebugLog(`URL: ${window.location.href.slice(0, 30)}...`)
 
     // Restore session if exists
     const savedSession = sessionStorage.getItem('phantom_session')
@@ -139,18 +141,17 @@ export function WalletButton({ className }: WalletButtonProps) {
           ? `${publicKey.toString().slice(0, 4)}...${publicKey.toString().slice(-4)}`
           : 'Connect Wallet'}
       </Button>
-      {/* Debug Overlay */}
-      {isMobile && (
-        <div className='fixed bottom-16 left-4 right-4 bg-black/80 text-white p-2 text-xs font-mono z-50 rounded-lg mb-4 max-h-32 overflow-y-auto'>
-          <div className='max-w-full'>
-            {debugLogs.map((log, i) => (
-              <div key={i} className='whitespace-pre-wrap break-words'>
-                {log}
-              </div>
-            ))}
-          </div>
+      {/* Debug Overlay - removed isMobile check temporarily */}
+      <div className='fixed top-20 left-4 right-4 bg-black text-white p-4 text-sm font-mono z-50 rounded-lg shadow-lg border border-purple-500'>
+        <div className='max-w-full'>
+          <div className='font-bold mb-2'>Debug Logs:</div>
+          {debugLogs.map((log, i) => (
+            <div key={i} className='whitespace-pre-wrap break-words mb-1'>
+              {log}
+            </div>
+          ))}
         </div>
-      )}
+      </div>
     </>
   )
 }
