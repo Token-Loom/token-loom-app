@@ -69,13 +69,9 @@ export async function burnTokens({
     const decimals = parsedData.info.mint.decimals
 
     // Convert amount to raw amount based on decimals
-    // Use string for precise decimal multiplication
     const floatAmount = parseFloat(amount)
-    const baseStr = floatAmount.toFixed(decimals) // Convert to string with exact decimal places
-    const wholePart = baseStr.split('.')[0]
-    const decimalPart = (baseStr.split('.')[1] || '').padEnd(decimals, '0')
-    const rawAmountStr = wholePart + decimalPart
-    const rawAmount = BigInt(rawAmountStr)
+    // Multiply by 10^decimals to get the raw amount
+    const rawAmount = BigInt(Math.floor(floatAmount * Math.pow(10, decimals)))
 
     // Create burn instruction
     const burnInstruction = createBurnInstruction(tokenAccount, mintPubkey, wallet, rawAmount)
