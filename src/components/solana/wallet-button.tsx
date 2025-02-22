@@ -101,14 +101,23 @@ export function WalletButton({ className }: WalletButtonProps) {
 
       if (url.includes('phantom_encryption_public_key')) {
         addDebugLog('Found Phantom response')
+        // Log full URL for debugging
+        addDebugLog(`Full return URL: ${url}`)
+
         const response = handlePhantomResponse(url, addDebugLog)
 
         if (response) {
           addDebugLog(`Got public key: ${response.publicKey.slice(0, 10)}...`)
 
-          // Clean up the URL by removing Phantom's parameters
-          const cleanUrl = `${window.location.origin}${window.location.pathname}`
-          window.history.replaceState({}, '', cleanUrl)
+          // Clean up the URL by removing Phantom's parameters while preserving other query params
+          const currentUrl = new URL(window.location.href)
+          currentUrl.searchParams.delete('phantom_encryption_public_key')
+          currentUrl.searchParams.delete('data')
+          currentUrl.searchParams.delete('nonce')
+          currentUrl.searchParams.delete('errorCode')
+          currentUrl.searchParams.delete('errorMessage')
+
+          window.history.replaceState({}, '', currentUrl.toString())
 
           // Store public key
           localStorage.setItem('phantom_public_key', response.publicKey)
