@@ -92,14 +92,14 @@ export const connectPhantomMobile = () => {
     })
   )
 
-  // Store current URL to return to
-  const currentUrl = window.location.href
-  localStorage.setItem('phantom_redirect_url', currentUrl)
+  // Use absolute URL without any parameters for redirect
+  const redirectUrl = `${window.location.origin}${window.location.pathname}`
+  localStorage.setItem('phantom_redirect_url', redirectUrl)
 
   // Construct URL exactly as shown in documentation
   const params = new URLSearchParams({
     dapp_encryption_public_key: bs58.encode(dappKeyPair.publicKey),
-    redirect_link: currentUrl,
+    redirect_link: redirectUrl,
     app_url: window.location.origin,
     cluster: 'mainnet-beta'
   })
@@ -108,7 +108,7 @@ export const connectPhantomMobile = () => {
 
   console.log('Opening Phantom URL:', url)
 
-  // For mobile browsers, we use window.location.href to maintain the same tab
+  // For mobile browsers, redirect to Phantom
   window.location.href = url
 }
 
