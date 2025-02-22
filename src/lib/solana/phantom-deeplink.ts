@@ -88,43 +88,61 @@ interface PhantomResponseData {
 }
 
 // Function to handle the connection response from Phantom
-export const handlePhantomResponse = (url: string): { publicKey: string; session: string } | null => {
+export const handlePhantomResponse = (
+  url: string,
+  onDebug?: (message: string) => void
+): { publicKey: string; session: string } | null => {
   try {
+    onDebug?.('Handling response URL')
     const urlParams = new URLSearchParams(new URL(url).search)
+
+    // Log all parameters except sensitive data
+    const params = Object.fromEntries(urlParams.entries())
+    onDebug?.(`Parameters: ${Object.keys(params).join(', ')}`)
+
     const data = urlParams.get('data')
     const nonce = urlParams.get('nonce')
     const phantomEncryptionPublicKey = urlParams.get('phantom_encryption_public_key')
 
     // Check for error response
     if (urlParams.get('errorCode')) {
-      throw new Error(urlParams.get('errorMessage') || 'Unknown error')
+      const errorMessage = urlParams.get('errorMessage')
+      onDebug?.(`Error: ${errorMessage}`)
+      throw new Error(errorMessage || 'Unknown error')
     }
 
     if (!data || !nonce || !phantomEncryptionPublicKey) {
+      onDebug?.('Missing required parameters')
       throw new Error('Missing required parameters')
     }
 
     // Retrieve our keypair from session storage
     const keypairString = sessionStorage.getItem('phantom_keypair')
     if (!keypairString) {
+      onDebug?.('No keypair in session')
       throw new Error('No keypair found in session storage')
     }
 
     const keypair = JSON.parse(keypairString)
+    onDebug?.('Retrieved keypair')
+
     const dappSecretKey = new Uint8Array(Buffer.from(keypair.secretKey, 'hex'))
 
     // Create shared secret
     const sharedSecretDapp = nacl.box.before(bs58.decode(phantomEncryptionPublicKey), dappSecretKey)
+    onDebug?.('Created shared secret')
 
     // Decrypt the data
     const decryptedData = nacl.box.open.after(bs58.decode(data), bs58.decode(nonce), sharedSecretDapp)
-
     if (!decryptedData) {
+      onDebug?.('Failed to decrypt data')
       throw new Error('Unable to decrypt data')
     }
+    onDebug?.('Decrypted data successfully')
 
     // Parse the decrypted data
     const decodedData = JSON.parse(Buffer.from(decryptedData).toString('utf8')) as PhantomResponseData
+    onDebug?.('Parsed response data')
 
     // Clean up session storage
     sessionStorage.removeItem('phantom_keypair')
@@ -134,7 +152,7 @@ export const handlePhantomResponse = (url: string): { publicKey: string; session
       session: decodedData.session
     }
   } catch (error) {
-    console.error('Error handling Phantom response:', error)
+    onDebug?.(`Error: ${error instanceof Error ? error.message : 'Unknown error'}`)
     return null
   }
 }

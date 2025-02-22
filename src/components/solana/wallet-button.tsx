@@ -23,15 +23,23 @@ export function WalletButton({ className }: WalletButtonProps) {
   const [isPhantomAvailable, setIsPhantomAvailable] = useState(false)
   const [isMobile, setIsMobile] = useState(false)
   const [session, setSession] = useState<string | null>(null)
+  const [debugLogs, setDebugLogs] = useState<string[]>([])
+
+  const addDebugLog = (message: string) => {
+    setDebugLogs(prev => [...prev.slice(-4), message]) // Keep last 5 messages
+  }
 
   useEffect(() => {
     setIsPhantomAvailable(checkForPhantom())
     setIsMobile(isMobileDevice())
+    addDebugLog(`Device: ${isMobileDevice() ? 'Mobile' : 'Desktop'}`)
+    addDebugLog(`Phantom Available: ${checkForPhantom()}`)
 
     // Restore session if exists
     const savedSession = sessionStorage.getItem('phantom_session')
     if (savedSession) {
       setSession(savedSession)
+      addDebugLog('Session restored')
     }
   }, [])
 
@@ -62,9 +70,14 @@ export function WalletButton({ className }: WalletButtonProps) {
 
     // Check if we're returning from a Phantom connection
     const url = window.location.href
+    addDebugLog(`Checking URL: ${url.slice(0, 50)}...`)
+
     if (url.includes('phantom_encryption_public_key')) {
-      const response = handlePhantomResponse(url)
+      addDebugLog('Found Phantom response')
+      const response = handlePhantomResponse(url, addDebugLog)
+
       if (response) {
+        addDebugLog(`Got public key: ${response.publicKey.slice(0, 10)}...`)
         // Clean up the URL
         window.history.replaceState({}, '', window.location.origin)
 
@@ -74,19 +87,25 @@ export function WalletButton({ className }: WalletButtonProps) {
 
         // Update wallet adapter state by connecting through provider
         const provider = getPhantomProvider()
+
         if (provider) {
+          addDebugLog('Connecting to provider...')
           provider
             .connect()
             .then(() => {
-              console.log('Successfully connected to Phantom')
+              addDebugLog('Connected successfully')
             })
             .catch(error => {
-              console.error('Error connecting to Phantom:', error)
+              addDebugLog(`Error: ${error.message}`)
               // Clear session if connection fails
               sessionStorage.removeItem('phantom_session')
               setSession(null)
             })
+        } else {
+          addDebugLog('No provider found')
         }
+      } else {
+        addDebugLog('Failed to handle response')
       }
     }
   }, [])
@@ -107,17 +126,31 @@ export function WalletButton({ className }: WalletButtonProps) {
   }
 
   return (
-    <Button
-      variant='outline'
-      className={cn(
-        'border-[#9945FF] bg-transparent text-[#9945FF] hover:bg-[#9945FF] hover:text-[#E6E6E6]',
-        className
+    <>
+      <Button
+        variant='outline'
+        className={cn(
+          'border-[#9945FF] bg-transparent text-[#9945FF] hover:bg-[#9945FF] hover:text-[#E6E6E6]',
+          className
+        )}
+        onClick={handleClick}
+      >
+        {connected && publicKey
+          ? `${publicKey.toString().slice(0, 4)}...${publicKey.toString().slice(-4)}`
+          : 'Connect Wallet'}
+      </Button>
+      {/* Debug Overlay */}
+      {isMobile && (
+        <div className='fixed bottom-0 left-0 right-0 bg-black/80 text-white p-4 text-sm font-mono z-50'>
+          <div className='max-w-full overflow-x-auto'>
+            {debugLogs.map((log, i) => (
+              <div key={i} className='whitespace-nowrap'>
+                {log}
+              </div>
+            ))}
+          </div>
+        </div>
       )}
-      onClick={handleClick}
-    >
-      {connected && publicKey
-        ? `${publicKey.toString().slice(0, 4)}...${publicKey.toString().slice(-4)}`
-        : 'Connect Wallet'}
-    </Button>
+    </>
   )
 }
