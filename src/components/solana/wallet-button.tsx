@@ -162,7 +162,7 @@ export function WalletButton({ className }: WalletButtonProps) {
           : 'Connect Wallet'}
       </Button>
       {/* Debug Overlay */}
-      <div className='fixed top-10 min-w-[600px] left-4 right-4 max-w-xl mx-auto bg-black/90 text-white p-4 text-xs font-mono z-50 rounded-lg shadow-lg border border-purple-500 max-h-[50vh] overflow-y-auto'>
+      <div className='fixed top-10 min-h-[600px] left-4 right-4 max-w-xl mx-auto bg-black/90 text-white p-4 text-xs font-mono z-50 rounded-lg shadow-lg border border-purple-500 max-h-[50vh] overflow-y-auto'>
         <div className='max-w-full'>
           <div className='font-bold mb-2 text-purple-400'>Debug Logs:</div>
           {debugLogs.map((log, i) => (
