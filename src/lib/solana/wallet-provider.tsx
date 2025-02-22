@@ -25,8 +25,13 @@ export const SolanaWalletProvider: FC<Props> = ({ children }) => {
       new PhantomWalletAdapter({
         appIdentity: {
           name: 'ControlledBurn',
-          icon: 'https://controlledburn-mx4k.vercel.app/logo.svg', // Make sure this matches your actual logo URL
-          url: 'https://controlledburn-mx4k.vercel.app' // Make sure this matches your actual domain
+          icon: 'https://controlledburn-mx4k.vercel.app/logo.svg',
+          url: 'https://controlledburn-mx4k.vercel.app'
+        },
+        // Enable mobile web browser deep linking
+        mobile: {
+          enabled: true,
+          getUri: (uri: string) => uri
         }
       }),
       new SolflareWalletAdapter()

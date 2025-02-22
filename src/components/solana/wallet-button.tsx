@@ -5,13 +5,7 @@ import { useWalletModal } from '@solana/wallet-adapter-react-ui'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import { useEffect, useState, useCallback } from 'react'
-import {
-  checkForPhantom,
-  isMobileDevice,
-  connectPhantomMobile,
-  handlePhantomResponse,
-  getPhantomProvider
-} from '@/lib/solana/phantom-deeplink'
+import { isMobileDevice, handlePhantomResponse, getPhantomProvider } from '@/lib/solana/phantom-deeplink'
 
 interface WalletButtonProps {
   className?: string
@@ -20,7 +14,6 @@ interface WalletButtonProps {
 export function WalletButton({ className }: WalletButtonProps) {
   const { publicKey, disconnect, connected } = useWallet()
   const { setVisible } = useWalletModal()
-  const [isPhantomAvailable, setIsPhantomAvailable] = useState(false)
   const [isMobile, setIsMobile] = useState(false)
   const [session, setSession] = useState<string | null>(null)
   const [debugLogs, setDebugLogs] = useState<string[]>([])
@@ -30,11 +23,9 @@ export function WalletButton({ className }: WalletButtonProps) {
   }
 
   useEffect(() => {
-    setIsPhantomAvailable(checkForPhantom())
     setIsMobile(isMobileDevice())
     addDebugLog('Debug overlay active')
     addDebugLog(`Device: ${isMobileDevice() ? 'Mobile' : 'Desktop'}`)
-    addDebugLog(`Phantom Available: ${checkForPhantom()}`)
     addDebugLog(`URL: ${window.location.href.slice(0, 30)}...`)
 
     // Restore session if exists
@@ -115,15 +106,9 @@ export function WalletButton({ className }: WalletButtonProps) {
   const handleClick = () => {
     if (connected) {
       handleDisconnect()
-    } else if (isMobile) {
-      // On mobile, use deep linking
-      connectPhantomMobile()
-    } else if (isPhantomAvailable) {
-      // On desktop with Phantom installed, use wallet adapter
-      setVisible(true)
     } else {
-      // If Phantom is not installed, redirect to install page
-      window.open('https://phantom.app/', '_blank')
+      // Always use wallet adapter connect
+      setVisible(true)
     }
   }
 
