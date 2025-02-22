@@ -49,10 +49,11 @@ export const checkForPhantom = (): boolean => {
 export const isMobileDevice = (): boolean => {
   if (typeof window === 'undefined') return false
 
-  // Check user agent for mobile devices
-  const userAgentCheck = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini|Mobile|mobile|CriOS/i.test(
-    navigator.userAgent
-  )
+  // Check user agent for mobile devices including foldables
+  const userAgentCheck =
+    /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini|Mobile|mobile|CriOS|SM-F|Fold/i.test(
+      navigator.userAgent
+    )
 
   // Check for touch support
   const touchSupport = 'ontouchstart' in window || navigator.maxTouchPoints > 0
@@ -60,13 +61,15 @@ export const isMobileDevice = (): boolean => {
   // Check screen characteristics
   const screenCheck = window.innerWidth <= 1024 || window.screen.width <= 1024
 
-  // For foldable devices, also check for specific features
+  // For foldable devices, check for specific features
   const foldableCheck =
     'windowSegments' in window || // Check for foldable-specific API
     // Samsung foldable detection
-    /Samsung.*SM-F/i.test(navigator.userAgent) ||
-    // Check for other common foldable identifiers
-    /Fold/i.test(navigator.userAgent)
+    /SM-F|Fold/i.test(navigator.userAgent) ||
+    // Additional foldable checks
+    ('screen' in window && 'orientation' in window.screen) ||
+    // Check for multi-screen API
+    'getWindowSegments' in window
 
   // Return true if any of these conditions are met
   return userAgentCheck || (touchSupport && screenCheck) || foldableCheck
@@ -101,21 +104,46 @@ export const getPhantomProvider = (): PhantomProvider['solana'] | null => {
 export const connectPhantomMobile = () => {
   if (typeof window === 'undefined') return
 
-  // For mobile web browser, use a simpler direct connection URL
+  // Store current URL for redirect
+  const currentUrl = window.location.href
+  localStorage.setItem('phantom_redirect_url', currentUrl)
+
+  // Try to detect if Phantom is installed
+  const isPhantomInstalled = 'phantom' in window || document.querySelector('meta[name="phantom-deeplink"]')
+
+  // For mobile web browser, create connection parameters
   const params = new URLSearchParams({
     app_url: window.location.origin,
-    redirect_link: window.location.href,
-    cluster: 'mainnet-beta'
+    redirect_link: currentUrl,
+    dapp_encryption_public_key: localStorage.getItem('phantom_dapp_public_key') || '',
+    cluster: process.env.NEXT_PUBLIC_SOLANA_NETWORK || 'mainnet-beta',
+    app_identity: JSON.stringify({
+      name: 'ControlledBurn',
+      icon: `${window.location.origin}/logo.svg`,
+      url: window.location.origin
+    })
   })
 
   // Create the connection URL
   const phantomConnectUrl = `https://phantom.app/ul/v1/connect?${params.toString()}`
 
-  // For mobile web, we need to use the browse endpoint
-  const encodedUrl = encodeURIComponent(window.location.href)
-  const deepLink = `https://phantom.app/ul/browse/${encodedUrl}?ref=${encodeURIComponent(phantomConnectUrl)}`
+  // If Phantom is installed, try direct deep linking first
+  if (isPhantomInstalled) {
+    const deepLink = `phantom://ul/v1/connect?${params.toString()}`
+    window.location.href = deepLink
 
-  window.location.href = deepLink
+    // Fallback to web URL after a short delay if deep link fails
+    setTimeout(() => {
+      if (document.visibilityState !== 'hidden') {
+        window.location.href = phantomConnectUrl
+      }
+    }, 500)
+  } else {
+    // For devices without Phantom installed, use the browse endpoint
+    const encodedUrl = encodeURIComponent(currentUrl)
+    const webDeepLink = `https://phantom.app/ul/browse/${encodedUrl}?ref=${encodeURIComponent(phantomConnectUrl)}`
+    window.location.href = webDeepLink
+  }
 }
 
 interface PhantomResponseData {
