@@ -26,13 +26,14 @@ const DebugToast: FC<{ message: string; onClose: () => void }> = ({ message, onC
 
 export const SolanaWalletProvider: FC<Props> = ({ children }) => {
   const [debugMessage, setDebugMessage] = useState<string | null>(null)
+  const [isConnecting, setIsConnecting] = useState(false)
 
   // Mobile-friendly debug logger
   const logDebug = useCallback((message: string, data?: unknown) => {
     const timestamp = new Date().toLocaleTimeString()
     const fullMessage = `[${timestamp}] ${message}\n${data ? JSON.stringify(data, null, 2) : ''}`
-    setDebugMessage(fullMessage)
-    console.log(fullMessage) // Keep console.log for desktop debugging
+    setDebugMessage(prev => `${fullMessage}\n\n${prev || ''}`)
+    console.log(fullMessage)
   }, [])
 
   // Set up RPC endpoint
@@ -70,15 +71,7 @@ export const SolanaWalletProvider: FC<Props> = ({ children }) => {
     })
     logDebug('Cleared storage keys', { keys: clearedKeys })
 
-    // Force disconnect any existing wallet connection
-    if (typeof window !== 'undefined' && window.solana) {
-      try {
-        window.solana.disconnect()
-        logDebug('Disconnected existing wallet connection')
-      } catch (error) {
-        logDebug('Error disconnecting wallet', { error: error instanceof Error ? error.message : String(error) })
-      }
-    }
+    setIsConnecting(false)
   }, [logDebug])
 
   // Handle redirect after wallet connection
@@ -86,14 +79,15 @@ export const SolanaWalletProvider: FC<Props> = ({ children }) => {
     (uri: string) => {
       if (typeof window === 'undefined') return uri
 
-      // Clear any existing wallet state before starting new connection
-      clearWalletStorage()
-
+      setIsConnecting(true)
       const currentUrl = window.location.href
-      logDebug('Wallet connection redirect', {
+
+      logDebug('Starting wallet connection', {
         currentUrl,
         uri,
-        userAgent: window.navigator.userAgent
+        userAgent: window.navigator.userAgent,
+        hasPhantom: !!window.solana,
+        phantomState: window.solana?.isPhantom
       })
 
       // Store connection state with device info
@@ -109,27 +103,35 @@ export const SolanaWalletProvider: FC<Props> = ({ children }) => {
 
       return uri
     },
-    [clearWalletStorage, logDebug]
+    [logDebug]
   )
 
   // Initialize supported wallets with mobile configuration
-  const wallets = useMemo(
-    () => [
-      new PhantomWalletAdapter({
-        appIdentity: {
-          name: 'ControlledBurn',
-          icon: 'https://controlledburn-mx4k.vercel.app/logo.svg',
-          url: 'https://controlledburn-mx4k.vercel.app'
-        },
-        mobile: {
-          enabled: true,
-          getUri: handleRedirect
-        }
-      }),
-      new SolflareWalletAdapter()
-    ],
-    [handleRedirect]
-  )
+  const wallets = useMemo(() => {
+    const phantomWallet = new PhantomWalletAdapter({
+      appIdentity: {
+        name: 'ControlledBurn',
+        icon: 'https://controlledburn-mx4k.vercel.app/logo.svg',
+        url: 'https://controlledburn-mx4k.vercel.app'
+      },
+      mobile: {
+        enabled: true,
+        getUri: handleRedirect
+      }
+    })
+
+    // Log wallet state changes
+    phantomWallet.on('readyStateChange', (readyState: string) => {
+      logDebug('Phantom wallet state changed', {
+        readyState,
+        connected: phantomWallet.connected,
+        connecting: phantomWallet.connecting,
+        publicKey: phantomWallet.publicKey?.toBase58()
+      })
+    })
+
+    return [phantomWallet, new SolflareWalletAdapter()]
+  }, [handleRedirect, logDebug])
 
   // Handle connection lifecycle
   useEffect(() => {
@@ -137,26 +139,39 @@ export const SolanaWalletProvider: FC<Props> = ({ children }) => {
 
     const handleConnectionReturn = () => {
       try {
-        logDebug('Checking connection state')
         const stateStr = localStorage.getItem(WALLET_STATE_KEY)
         const returnUrl = localStorage.getItem('wallet_adapter_return_url')
+
+        logDebug('Checking connection state', {
+          hasState: !!stateStr,
+          returnUrl,
+          currentUrl: window.location.href,
+          hasPhantom: !!window.solana,
+          phantomState: window.solana?.isPhantom,
+          isConnecting
+        })
 
         if (stateStr) {
           const state = JSON.parse(stateStr)
           const elapsed = Date.now() - state.timestamp
 
-          logDebug('Connection state', {
-            state,
-            elapsed,
-            returnUrl,
-            currentUrl: window.location.href,
-            hasPhantom: !!window.solana
-          })
-
-          // If connection attempt is too old or completed
-          if (elapsed > 5 * 60 * 1000 || !state.connecting) {
-            logDebug('Clearing stale connection state')
+          if (elapsed > 5 * 60 * 1000) {
+            logDebug('Clearing stale connection state', { elapsed })
             clearWalletStorage()
+          } else if (isConnecting && window.solana?.isPhantom) {
+            logDebug('Attempting to reconnect Phantom')
+            window.solana
+              .connect({ onlyIfTrusted: true })
+              .then(() => {
+                logDebug('Phantom reconnected successfully')
+                setIsConnecting(false)
+              })
+              .catch((error: unknown) => {
+                logDebug('Error reconnecting Phantom', {
+                  error: error instanceof Error ? error.message : String(error)
+                })
+                clearWalletStorage()
+              })
           }
         }
       } catch (error) {
@@ -178,7 +193,7 @@ export const SolanaWalletProvider: FC<Props> = ({ children }) => {
       window.removeEventListener('focus', handleConnectionReturn)
       window.removeEventListener('visibilitychange', handleConnectionReturn)
     }
-  }, [clearWalletStorage, logDebug])
+  }, [clearWalletStorage, logDebug, isConnecting])
 
   return (
     <ConnectionProvider endpoint={endpoint}>
