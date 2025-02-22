@@ -4,7 +4,7 @@ import { Buffer } from 'buffer'
 import { PublicKey, Transaction } from '@solana/web3.js'
 
 // Base URL for Phantom deep links
-const PHANTOM_DEEPLINK_BASE_URL = 'https://phantom.app/ul'
+const PHANTOM_DEEPLINK_BASE_URL = 'https://phantom.app/ul/v1'
 
 interface PhantomProvider {
   isPhantom?: boolean
@@ -25,7 +25,6 @@ interface PhantomProvider {
 declare global {
   interface Window {
     phantom?: PhantomProvider
-    solana?: PhantomProvider['solana']
   }
 }
 
@@ -51,20 +50,12 @@ export const buildPhantomDeepLink = (path: string, params: Record<string, string
 // Function to get the Phantom provider
 export const getPhantomProvider = (): PhantomProvider['solana'] | null => {
   if (typeof window === 'undefined') return null
-
-  // Check for Phantom provider in window.phantom
   if ('phantom' in window) {
     const provider = window.phantom?.solana
     if (provider?.isPhantom) {
       return provider
     }
   }
-
-  // Check for Solana provider in window.solana
-  if (window.solana?.isPhantom) {
-    return window.solana
-  }
-
   return null
 }
 
@@ -72,15 +63,6 @@ export const getPhantomProvider = (): PhantomProvider['solana'] | null => {
 export const connectPhantomMobile = () => {
   if (typeof window === 'undefined') return
 
-  // Check if Phantom is installed
-  const phantomProvider = getPhantomProvider()
-  if (phantomProvider) {
-    // If Phantom is installed, use the provider directly
-    phantomProvider.connect().catch(error => console.error('Error connecting to Phantom:', error))
-    return
-  }
-
-  // If Phantom is not installed, use deep linking
   // Generate a new keypair for this connection
   const dappKeyPair = nacl.box.keyPair()
 
