@@ -178,7 +178,8 @@ export const SolanaWalletProvider: FC<Props> = ({ children }) => {
           currentUrl: window.location.href,
           hasPhantom: !!window.solana,
           phantomState: window.solana?.isPhantom,
-          isConnecting
+          isConnecting,
+          state: stateStr ? JSON.parse(stateStr) : null
         })
 
         if (stateStr) {
@@ -188,7 +189,9 @@ export const SolanaWalletProvider: FC<Props> = ({ children }) => {
           if (elapsed > 5 * 60 * 1000) {
             logDebug('Clearing stale connection state', { elapsed })
             clearWalletStorage()
-          } else if (isConnecting && window.solana?.isPhantom) {
+          } else if (state.connecting && window.solana?.isPhantom) {
+            // Use the state's connecting flag instead of component state
+            setIsConnecting(true)
             connectPhantom()
           }
         }
@@ -198,8 +201,12 @@ export const SolanaWalletProvider: FC<Props> = ({ children }) => {
       }
     }
 
-    // Check connection state on mount and focus
+    // Check connection state immediately and after a short delay
     handleConnectionReturn()
+    const immediateCheck = setTimeout(handleConnectionReturn, 100)
+    const delayedCheck = setTimeout(handleConnectionReturn, 1000)
+
+    // Check on focus and visibility changes
     window.addEventListener('focus', handleConnectionReturn)
     window.addEventListener('visibilitychange', () => {
       if (document.visibilityState === 'visible') {
@@ -208,10 +215,27 @@ export const SolanaWalletProvider: FC<Props> = ({ children }) => {
     })
 
     return () => {
+      clearTimeout(immediateCheck)
+      clearTimeout(delayedCheck)
       window.removeEventListener('focus', handleConnectionReturn)
       window.removeEventListener('visibilitychange', handleConnectionReturn)
     }
   }, [clearWalletStorage, logDebug, isConnecting, connectPhantom])
+
+  // Handle initial mount
+  useEffect(() => {
+    const stateStr = localStorage.getItem(WALLET_STATE_KEY)
+    if (stateStr) {
+      try {
+        const state = JSON.parse(stateStr)
+        if (state.connecting) {
+          setIsConnecting(true)
+        }
+      } catch {
+        // Ignore parse errors
+      }
+    }
+  }, [])
 
   return (
     <ConnectionProvider endpoint={endpoint}>
