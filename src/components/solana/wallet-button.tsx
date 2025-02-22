@@ -26,7 +26,11 @@ export function WalletButton({ className }: WalletButtonProps) {
   const [debugLogs, setDebugLogs] = useState<string[]>([])
 
   const addDebugLog = (message: string) => {
-    setDebugLogs(prev => [...prev.slice(-4), message]) // Keep last 5 messages
+    console.log('Debug:', message) // Also log to console
+    setDebugLogs(prev => {
+      const timestamp = new Date().toLocaleTimeString()
+      return [...prev, `[${timestamp}] ${message}`].slice(-15) // Keep last 15 messages
+    })
   }
 
   useEffect(() => {
@@ -35,7 +39,7 @@ export function WalletButton({ className }: WalletButtonProps) {
     addDebugLog('Debug overlay active')
     addDebugLog(`Device: ${isMobileDevice() ? 'Mobile' : 'Desktop'}`)
     addDebugLog(`Phantom Available: ${checkForPhantom()}`)
-    addDebugLog(`URL: ${window.location.href.slice(0, 30)}...`)
+    addDebugLog(`URL: ${window.location.href}`)
 
     // Restore session if exists
     const savedSession = sessionStorage.getItem('phantom_session')
@@ -157,12 +161,12 @@ export function WalletButton({ className }: WalletButtonProps) {
           ? `${publicKey.toString().slice(0, 4)}...${publicKey.toString().slice(-4)}`
           : 'Connect Wallet'}
       </Button>
-      {/* Debug Overlay - removed isMobile check temporarily */}
-      <div className='fixed top-20 left-4 right-4 bg-black text-white p-4 text-sm font-mono z-50 rounded-lg shadow-lg border border-purple-500'>
+      {/* Debug Overlay */}
+      <div className='fixed bottom-4 left-4 right-4 max-w-xl mx-auto bg-black/90 text-white p-4 text-xs font-mono z-50 rounded-lg shadow-lg border border-purple-500 max-h-[50vh] overflow-y-auto'>
         <div className='max-w-full'>
-          <div className='font-bold mb-2'>Debug Logs:</div>
+          <div className='font-bold mb-2 text-purple-400'>Debug Logs:</div>
           {debugLogs.map((log, i) => (
-            <div key={i} className='whitespace-pre-wrap break-words mb-1'>
+            <div key={i} className='whitespace-pre-wrap break-words mb-1 opacity-90 hover:opacity-100'>
               {log}
             </div>
           ))}
