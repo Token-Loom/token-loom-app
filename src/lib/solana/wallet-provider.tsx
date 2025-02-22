@@ -143,19 +143,22 @@ export const SolanaWalletProvider: FC<Props> = ({ children }) => {
 
     try {
       logDebug('Attempting to connect to Phantom')
-      // First try trusted connection
+
+      // For multiple wallet support, we need to force a fresh connection
+      // to allow wallet selection in Phantom
       try {
-        await window.solana.connect({ onlyIfTrusted: true })
-        logDebug('Connected with trusted connection')
-        setIsConnecting(false)
-        return
+        // First disconnect any existing connection
+        await window.solana.disconnect()
+        logDebug('Disconnected existing connection')
       } catch {
-        logDebug('Trusted connection failed, trying regular connect')
+        // Ignore disconnect errors
       }
 
-      // If trusted fails, try regular connect
-      await window.solana.connect()
-      logDebug('Connected with regular connection')
+      // Connect with wallet selection enabled
+      await window.solana.connect({
+        onlyIfTrusted: false // Force wallet selection UI
+      })
+      logDebug('Connected with wallet selection')
       setIsConnecting(false)
     } catch (error) {
       logDebug('Error connecting to Phantom', { error: error instanceof Error ? error.message : String(error) })
@@ -179,7 +182,8 @@ export const SolanaWalletProvider: FC<Props> = ({ children }) => {
           hasPhantom: !!window.solana,
           phantomState: window.solana?.isPhantom,
           isConnecting,
-          state: stateStr ? JSON.parse(stateStr) : null
+          state: stateStr ? JSON.parse(stateStr) : null,
+          connected: window.solana?.isConnected
         })
 
         if (stateStr) {
@@ -189,8 +193,8 @@ export const SolanaWalletProvider: FC<Props> = ({ children }) => {
           if (elapsed > 5 * 60 * 1000) {
             logDebug('Clearing stale connection state', { elapsed })
             clearWalletStorage()
-          } else if (state.connecting && window.solana?.isPhantom) {
-            // Use the state's connecting flag instead of component state
+          } else if (!window.solana?.isConnected && state.connecting && window.solana?.isPhantom) {
+            // Only try to connect if we're not already connected
             setIsConnecting(true)
             connectPhantom()
           }
@@ -203,8 +207,8 @@ export const SolanaWalletProvider: FC<Props> = ({ children }) => {
 
     // Check connection state immediately and after a short delay
     handleConnectionReturn()
-    const immediateCheck = setTimeout(handleConnectionReturn, 100)
-    const delayedCheck = setTimeout(handleConnectionReturn, 1000)
+    const immediateCheck = setTimeout(handleConnectionReturn, 500)
+    const delayedCheck = setTimeout(handleConnectionReturn, 2000)
 
     // Check on focus and visibility changes
     window.addEventListener('focus', handleConnectionReturn)
