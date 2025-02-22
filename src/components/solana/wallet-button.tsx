@@ -5,6 +5,7 @@ import { useWalletModal } from '@solana/wallet-adapter-react-ui'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import { useEffect, useState, useCallback } from 'react'
+import { PublicKey } from '@solana/web3.js'
 import {
   checkForPhantom,
   isMobileDevice,
@@ -17,12 +18,16 @@ interface WalletButtonProps {
   className?: string
 }
 
+interface PhantomWalletAdapter {
+  publicKey?: PublicKey
+  connected?: boolean
+}
+
 export function WalletButton({ className }: WalletButtonProps) {
-  const { publicKey, disconnect, connected } = useWallet()
+  const wallet = useWallet()
   const { setVisible } = useWalletModal()
   const [isPhantomAvailable, setIsPhantomAvailable] = useState(false)
   const [isMobile, setIsMobile] = useState(false)
-  const [session, setSession] = useState<string | null>(null)
   const [debugLogs, setDebugLogs] = useState<string[]>([])
 
   const addDebugLog = (message: string) => {
@@ -53,13 +58,6 @@ export function WalletButton({ className }: WalletButtonProps) {
     window.addEventListener('orientationchange', handleOrientationChange)
     window.addEventListener('resize', handleOrientationChange)
 
-    // Restore session if exists
-    const savedSession = localStorage.getItem('phantom_session')
-    if (savedSession) {
-      setSession(savedSession)
-      addDebugLog('Session restored')
-    }
-
     return () => {
       window.removeEventListener('orientationchange', handleOrientationChange)
       window.removeEventListener('resize', handleOrientationChange)
@@ -67,12 +65,15 @@ export function WalletButton({ className }: WalletButtonProps) {
   }, [])
 
   const handleDisconnect = useCallback(async () => {
-    // Clear session
+    // Clear storage
     localStorage.removeItem('phantom_session')
-    setSession(null)
+    localStorage.removeItem('phantom_public_key')
 
-    // If on mobile, we need to handle disconnect through Phantom
-    if (isMobile && session) {
+    // Reset wallet adapter state
+    if (isMobile) {
+      wallet.disconnect()
+    } else {
+      // If on desktop, we need to handle disconnect through Phantom
       const provider = getPhantomProvider()
       if (provider) {
         try {
@@ -81,11 +82,9 @@ export function WalletButton({ className }: WalletButtonProps) {
           console.error('Error disconnecting from Phantom:', error)
         }
       }
+      wallet.disconnect()
     }
-
-    // Use wallet adapter disconnect
-    disconnect()
-  }, [disconnect, isMobile, session])
+  }, [wallet, isMobile])
 
   // Handle Phantom connection response
   useEffect(() => {
@@ -104,12 +103,29 @@ export function WalletButton({ className }: WalletButtonProps) {
         // Clean up the URL
         window.history.replaceState({}, '', window.location.origin)
 
-        // Store session
-        localStorage.setItem('phantom_session', response.session)
-        setSession(response.session)
+        // Store public key
+        localStorage.setItem('phantom_public_key', response.publicKey)
 
-        // On mobile, we don't expect a provider
-        if (!isMobileDevice()) {
+        // Update wallet adapter state
+        if (isMobile) {
+          try {
+            // Set the wallet adapter state directly
+            const publicKey = new PublicKey(response.publicKey)
+            // Force the wallet to be connected with the public key
+            const phantomWallet = wallet.wallets.find(w => w.adapter.name === 'Phantom')
+            if (phantomWallet) {
+              wallet.select(phantomWallet.adapter.name)
+              const adapter = phantomWallet.adapter as unknown as PhantomWalletAdapter
+              adapter.publicKey = publicKey
+              adapter.connected = true
+              addDebugLog('Mobile connection successful')
+            } else {
+              addDebugLog('Phantom wallet not found in adapter list')
+            }
+          } catch (error) {
+            addDebugLog(`Error setting wallet state: ${error instanceof Error ? error.message : 'Unknown error'}`)
+          }
+        } else {
           const provider = getPhantomProvider()
           if (provider) {
             addDebugLog('Connecting to provider...')
@@ -120,24 +136,22 @@ export function WalletButton({ className }: WalletButtonProps) {
               })
               .catch(error => {
                 addDebugLog(`Error: ${error.message}`)
-                // Clear session if connection fails
+                // Clear storage if connection fails
                 localStorage.removeItem('phantom_session')
-                setSession(null)
+                localStorage.removeItem('phantom_public_key')
               })
           } else {
             addDebugLog('No provider found (expected on mobile)')
           }
-        } else {
-          addDebugLog('Mobile connection successful')
         }
       } else {
         addDebugLog('Failed to handle response')
       }
     }
-  }, [])
+  }, [wallet, isMobile])
 
   const handleClick = () => {
-    if (connected) {
+    if (wallet.connected) {
       handleDisconnect()
     } else if (isMobile) {
       // On mobile, always use deep linking
@@ -163,16 +177,15 @@ export function WalletButton({ className }: WalletButtonProps) {
         )}
         onClick={handleClick}
       >
-        {connected && publicKey
-          ? `${publicKey.toString().slice(0, 4)}...${publicKey.toString().slice(-4)}`
+        {wallet.connected && wallet.publicKey
+          ? `${wallet.publicKey.toString().slice(0, 4)}...${wallet.publicKey.toString().slice(-4)}`
           : 'Connect Wallet'}
       </Button>
-      {/* Debug Overlay - removed isMobile check temporarily */}
-      <div className='fixed h-[660px] top-20 left-4 right-4 bg-black text-white p-4 text-sm font-mono z-50 rounded-lg shadow-lg border border-purple-500'>
+      {/* Debug Overlay */}
+      <div className='fixed bottom-16 left-4 right-4 bg-black/80 text-white p-2 text-xs font-mono z-50 rounded-lg mb-4 max-h-32 overflow-y-auto'>
         <div className='max-w-full'>
-          <div className='font-bold mb-2'>Debug Logs:</div>
           {debugLogs.map((log, i) => (
-            <div key={i} className='whitespace-pre-wrap break-words mb-1'>
+            <div key={i} className='whitespace-pre-wrap break-words'>
               {log}
             </div>
           ))}
