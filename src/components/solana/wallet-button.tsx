@@ -26,11 +26,7 @@ export function WalletButton({ className }: WalletButtonProps) {
   const [debugLogs, setDebugLogs] = useState<string[]>([])
 
   const addDebugLog = (message: string) => {
-    console.log('Debug:', message) // Also log to console
-    setDebugLogs(prev => {
-      const timestamp = new Date().toLocaleTimeString()
-      return [...prev, `[${timestamp}] ${message}`].slice(-15) // Keep last 15 messages
-    })
+    setDebugLogs(prev => [...prev.slice(-4), message]) // Keep last 5 messages
   }
 
   useEffect(() => {
@@ -39,7 +35,7 @@ export function WalletButton({ className }: WalletButtonProps) {
     addDebugLog('Debug overlay active')
     addDebugLog(`Device: ${isMobileDevice() ? 'Mobile' : 'Desktop'}`)
     addDebugLog(`Phantom Available: ${checkForPhantom()}`)
-    addDebugLog(`URL: ${window.location.href}`)
+    addDebugLog(`URL: ${window.location.href.slice(0, 30)}...`)
 
     // Restore session if exists
     const savedSession = sessionStorage.getItem('phantom_session')
@@ -76,23 +72,14 @@ export function WalletButton({ className }: WalletButtonProps) {
 
     // Check if we're returning from a Phantom connection
     const url = window.location.href
-    addDebugLog(`Current URL: ${url}`)
+    addDebugLog(`Checking URL: ${url.slice(0, 50)}...`)
 
-    // Check for both direct parameters and hash parameters
-    const hasPhantomParams = url.includes('phantom_encryption_public_key')
-
-    if (hasPhantomParams) {
-      addDebugLog('Found Phantom response parameters')
-
-      // Get the raw URL without any hash
-      const baseUrl = url.split('#')[0]
-      addDebugLog(`Processing URL: ${baseUrl}`)
-
-      const response = handlePhantomResponse(baseUrl, addDebugLog)
+    if (url.includes('phantom_encryption_public_key')) {
+      addDebugLog('Found Phantom response')
+      const response = handlePhantomResponse(url, addDebugLog)
 
       if (response) {
         addDebugLog(`Got public key: ${response.publicKey.slice(0, 10)}...`)
-
         // Clean up the URL
         window.history.replaceState({}, '', window.location.origin)
 
@@ -100,32 +87,25 @@ export function WalletButton({ className }: WalletButtonProps) {
         sessionStorage.setItem('phantom_session', response.session)
         setSession(response.session)
 
-        // Wait for Phantom provider to be available
-        const checkAndConnect = async () => {
-          addDebugLog('Waiting for Phantom provider...')
-          // Try for up to 5 seconds
-          for (let i = 0; i < 10; i++) {
-            const provider = getPhantomProvider()
-            if (provider) {
-              addDebugLog('Found provider, connecting...')
-              try {
-                const result = await provider.connect()
-                addDebugLog(`Connected successfully: ${result.publicKey.toString()}`)
-                // Force a refresh of isPhantomAvailable
-                setIsPhantomAvailable(true)
-                return
-              } catch (error) {
-                addDebugLog(`Connection error: ${error instanceof Error ? error.message : 'Unknown error'}`)
-              }
-            }
-            addDebugLog('Provider not found, retrying...')
-            // Wait 500ms before trying again
-            await new Promise(resolve => setTimeout(resolve, 500))
-          }
-          addDebugLog('Failed to find Phantom provider after timeout')
-        }
+        // Update wallet adapter state by connecting through provider
+        const provider = getPhantomProvider()
 
-        checkAndConnect()
+        if (provider) {
+          addDebugLog('Connecting to provider...')
+          provider
+            .connect()
+            .then(() => {
+              addDebugLog('Connected successfully')
+            })
+            .catch(error => {
+              addDebugLog(`Error: ${error.message}`)
+              // Clear session if connection fails
+              sessionStorage.removeItem('phantom_session')
+              setSession(null)
+            })
+        } else {
+          addDebugLog('No provider found')
+        }
       } else {
         addDebugLog('Failed to handle response')
       }
@@ -161,12 +141,12 @@ export function WalletButton({ className }: WalletButtonProps) {
           ? `${publicKey.toString().slice(0, 4)}...${publicKey.toString().slice(-4)}`
           : 'Connect Wallet'}
       </Button>
-      {/* Debug Overlay */}
-      <div className='fixed top-10 min-h-[600px] left-4 right-4 max-w-xl mx-auto bg-black/90 text-white p-4 text-xs font-mono z-50 rounded-lg shadow-lg border border-purple-500 max-h-[50vh] overflow-y-auto'>
+      {/* Debug Overlay - removed isMobile check temporarily */}
+      <div className='fixed top-20 left-4 right-4 bg-black text-white p-4 text-sm font-mono z-50 rounded-lg shadow-lg border border-purple-500'>
         <div className='max-w-full'>
-          <div className='font-bold mb-2 text-purple-400'>Debug Logs:</div>
+          <div className='font-bold mb-2'>Debug Logs:</div>
           {debugLogs.map((log, i) => (
-            <div key={i} className='whitespace-pre-wrap break-words mb-1 opacity-90 hover:opacity-100'>
+            <div key={i} className='whitespace-pre-wrap break-words mb-1'>
               {log}
             </div>
           ))}

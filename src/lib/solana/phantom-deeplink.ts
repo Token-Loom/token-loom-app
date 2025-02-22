@@ -75,20 +75,11 @@ export const connectPhantomMobile = () => {
     })
   )
 
-  // Store the current URL for redirect
-  localStorage.setItem('phantom_redirect_url', window.location.href)
-
-  // For mobile web browser flow, we need to construct the URL differently
-  const phantomConnectUrl = new URL('https://phantom.app/ul/v1/connect')
-  phantomConnectUrl.searchParams.append('app_url', window.location.origin)
-  phantomConnectUrl.searchParams.append('dapp_encryption_public_key', bs58.encode(dappKeyPair.publicKey))
-  phantomConnectUrl.searchParams.append('redirect_url', window.location.href)
-  phantomConnectUrl.searchParams.append('cluster', 'mainnet-beta')
-
-  console.log('Connecting with URL:', phantomConnectUrl.toString())
+  // Construct URL exactly as shown in documentation
+  const url = `${PHANTOM_DEEPLINK_BASE_URL}/v1/connect?dapp_encryption_public_key=${bs58.encode(dappKeyPair.publicKey)}&redirect_link=${encodeURIComponent(window.location.href)}&app_url=${encodeURIComponent(window.location.origin)}&cluster=mainnet-beta`
 
   // For mobile browsers, we need to use window.location.href
-  window.location.href = phantomConnectUrl.toString()
+  window.location.href = url
 }
 
 interface PhantomResponseData {
@@ -103,12 +94,6 @@ export const handlePhantomResponse = (
 ): { publicKey: string; session: string } | null => {
   try {
     onDebug?.('Handling response URL')
-    onDebug?.(`Full URL: ${url}`)
-
-    // Check if we have a stored redirect URL
-    const storedRedirectUrl = localStorage.getItem('phantom_redirect_url')
-    onDebug?.(`Stored redirect URL: ${storedRedirectUrl}`)
-
     const urlParams = new URLSearchParams(new URL(url).search)
 
     // Log all parameters except sensitive data
@@ -128,7 +113,6 @@ export const handlePhantomResponse = (
 
     if (!data || !nonce || !phantomEncryptionPublicKey) {
       onDebug?.('Missing required parameters')
-      onDebug?.(`data: ${!!data}, nonce: ${!!nonce}, phantom_key: ${!!phantomEncryptionPublicKey}`)
       throw new Error('Missing required parameters')
     }
 
@@ -162,7 +146,6 @@ export const handlePhantomResponse = (
 
     // Clean up storage
     localStorage.removeItem('phantom_keypair')
-    localStorage.removeItem('phantom_redirect_url')
 
     return {
       publicKey: decodedData.public_key,
