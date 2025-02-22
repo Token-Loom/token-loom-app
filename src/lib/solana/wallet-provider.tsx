@@ -96,7 +96,8 @@ export const SolanaWalletProvider: FC<Props> = ({ children }) => {
         returnUrl: currentUrl,
         connecting: true,
         isMobile: /iPhone|iPad|Android/i.test(window.navigator.userAgent),
-        uri
+        uri,
+        needsApproval: true // Flag to indicate this is a new connection
       }
       localStorage.setItem(WALLET_STATE_KEY, JSON.stringify(connectionState))
       localStorage.setItem('wallet_adapter_return_url', currentUrl)
@@ -133,6 +134,35 @@ export const SolanaWalletProvider: FC<Props> = ({ children }) => {
     return [phantomWallet, new SolflareWalletAdapter()]
   }, [handleRedirect, logDebug])
 
+  // Attempt to connect to Phantom
+  const connectPhantom = useCallback(async () => {
+    if (!window.solana?.isPhantom) {
+      logDebug('Phantom not found')
+      return
+    }
+
+    try {
+      logDebug('Attempting to connect to Phantom')
+      // First try trusted connection
+      try {
+        await window.solana.connect({ onlyIfTrusted: true })
+        logDebug('Connected with trusted connection')
+        setIsConnecting(false)
+        return
+      } catch {
+        logDebug('Trusted connection failed, trying regular connect')
+      }
+
+      // If trusted fails, try regular connect
+      await window.solana.connect()
+      logDebug('Connected with regular connection')
+      setIsConnecting(false)
+    } catch (error) {
+      logDebug('Error connecting to Phantom', { error: error instanceof Error ? error.message : String(error) })
+      clearWalletStorage()
+    }
+  }, [logDebug, clearWalletStorage])
+
   // Handle connection lifecycle
   useEffect(() => {
     if (typeof window === 'undefined') return
@@ -159,19 +189,7 @@ export const SolanaWalletProvider: FC<Props> = ({ children }) => {
             logDebug('Clearing stale connection state', { elapsed })
             clearWalletStorage()
           } else if (isConnecting && window.solana?.isPhantom) {
-            logDebug('Attempting to reconnect Phantom')
-            window.solana
-              .connect({ onlyIfTrusted: true })
-              .then(() => {
-                logDebug('Phantom reconnected successfully')
-                setIsConnecting(false)
-              })
-              .catch((error: unknown) => {
-                logDebug('Error reconnecting Phantom', {
-                  error: error instanceof Error ? error.message : String(error)
-                })
-                clearWalletStorage()
-              })
+            connectPhantom()
           }
         }
       } catch (error) {
@@ -193,7 +211,7 @@ export const SolanaWalletProvider: FC<Props> = ({ children }) => {
       window.removeEventListener('focus', handleConnectionReturn)
       window.removeEventListener('visibilitychange', handleConnectionReturn)
     }
-  }, [clearWalletStorage, logDebug, isConnecting])
+  }, [clearWalletStorage, logDebug, isConnecting, connectPhantom])
 
   return (
     <ConnectionProvider endpoint={endpoint}>
