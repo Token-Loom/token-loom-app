@@ -20,17 +20,11 @@ export const SolanaWalletProvider: FC<Props> = ({ children }) => {
   }, [])
 
   // Initialize supported wallets
-  const wallets = useMemo(() => {
-    // Only include wallets that work well in mobile browsers
-    return [new PhantomWalletAdapter(), new SolflareWalletAdapter()]
-  }, [])
+  const wallets = useMemo(() => [new PhantomWalletAdapter(), new SolflareWalletAdapter()], [])
 
   return (
     <ConnectionProvider endpoint={endpoint}>
-      <WalletProvider
-        wallets={wallets}
-        autoConnect={false} // Disable autoConnect to prevent mobile browser issues
-      >
+      <WalletProvider wallets={wallets} autoConnect>
         <WalletModalProvider>{children}</WalletModalProvider>
       </WalletProvider>
     </ConnectionProvider>

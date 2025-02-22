@@ -41,10 +41,10 @@ export function FAQ() {
       <div className='container relative px-4 sm:px-6'>
         <div className='mx-auto max-w-6xl'>
           <div className='text-center'>
-            <h2 className='font-display mb-3 sm:mb-4 text-2xl sm:text-3xl font-bold tracking-tight text-[#E6E6E6] md:text-4xl'>
+            <h2 className='font-display mb-3 sm:mb-4 text-2xl sm:text-3xl font-bold text-[#E6E6E6] md:text-4xl'>
               Frequently Asked Questions
             </h2>
-            <p className='text-base sm:text-lg text-[#E6E6E6]/60'>
+            <p className='mx-auto max-w-2xl text-sm sm:text-base text-[#A3A3A3]'>
               Common questions about our token burning platform and how it works.
             </p>
           </div>

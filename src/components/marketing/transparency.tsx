@@ -30,13 +30,13 @@ export function Transparency() {
       <div className='container relative px-4 sm:px-6'>
         <div className='mx-auto max-w-6xl backdrop-blur-sm'>
           <div className='text-center'>
-            <h2 className='font-display mb-3 sm:mb-4 text-2xl sm:text-3xl font-bold tracking-tight text-[#E6E6E6] md:text-4xl'>
+            <h2 className='font-display mb-3 sm:mb-4 text-2xl sm:text-3xl font-bold text-[#E6E6E6] md:text-4xl'>
               Built on{' '}
               <span className='bg-gradient-to-r from-[#9945FF] via-[#14F195] to-[#00C2FF] bg-clip-text text-transparent'>
                 Transparency
               </span>
             </h2>
-            <p className='text-base sm:text-lg text-[#E6E6E6]/60'>
+            <p className='mx-auto max-w-2xl text-sm sm:text-base text-[#A3A3A3]'>
               We believe in complete transparency. Our platform is open source, our transactions are verifiable, and our
               processes are public.
             </p>

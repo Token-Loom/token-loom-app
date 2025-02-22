@@ -6,14 +6,14 @@ export function Banner() {
     <section className='relative min-h-[80vh] overflow-hidden py-12 sm:py-24 bg-[#13141F]'>
       <div className='container relative z-10 flex min-h-[calc(80vh-96px)] sm:min-h-[calc(80vh-160px)] flex-col items-center justify-center px-4 sm:px-6'>
         <div className='mx-auto max-w-3xl text-center'>
-          <h1 className='font-display mb-3 sm:mb-4 text-2xl sm:text-3xl font-bold tracking-tight text-[#E6E6E6] md:text-4xl'>
+          <h1 className='font-display mb-4 sm:mb-6 bg-gradient-to-r from-[#9945FF] via-[#14F195] to-[#00C2FF] bg-clip-text text-3xl font-bold text-transparent leading-tight sm:text-6xl sm:leading-tight'>
             Reduce Supply.
             <br />
             Increase Value.
             <br />
             Burn with Confidence.
           </h1>
-          <p className='text-base sm:text-lg text-[#E6E6E6]/60'>
+          <p className='mb-6 sm:mb-8 text-base sm:text-xl text-[#E6E6E6] px-2 sm:px-0'>
             The most secure and transparent way to burn Solana tokens. Supports both regular tokens and LP tokens with
             advanced scheduling and controlled burns.
           </p>
