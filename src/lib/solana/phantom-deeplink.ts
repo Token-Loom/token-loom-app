@@ -4,7 +4,7 @@ import { Buffer } from 'buffer'
 import { PublicKey, Transaction } from '@solana/web3.js'
 
 // Base URL for Phantom deep links
-const PHANTOM_DEEPLINK_BASE_URL = 'https://phantom.app/ul'
+const PHANTOM_DEEPLINK_BASE_URL = 'https://phantom.app/ul/v1'
 
 interface PhantomProvider {
   isPhantom?: boolean
@@ -82,8 +82,12 @@ export const connectPhantomMobile = () => {
     cluster: 'mainnet-beta'
   }
 
-  const deepLink = buildPhantomDeepLink('connect', params)
-  window.location.href = deepLink
+  // Build the URL with the proper format for mobile deep linking
+  const urlParams = new URLSearchParams(params)
+  const url = `${PHANTOM_DEEPLINK_BASE_URL}/v1/connect?${urlParams.toString()}`
+
+  // For mobile browsers, we need to use window.location.href
+  window.location.href = url
 }
 
 interface PhantomResponseData {
