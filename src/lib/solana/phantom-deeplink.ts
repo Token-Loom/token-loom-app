@@ -31,9 +31,13 @@ declare global {
 // Function to check if Phantom wallet is available
 export const checkForPhantom = (): boolean => {
   if (typeof window === 'undefined') return false
+  // On mobile, we'll always use deep linking
+  if (isMobileDevice()) return true
+  // On desktop, check for the injected provider
   const provider = window.phantom?.solana
   const hasProvider = provider?.isPhantom || false
   console.log('Phantom check:', {
+    isMobile: isMobileDevice(),
     hasPhantom: 'phantom' in window,
     hasProvider: !!provider,
     isPhantom: provider?.isPhantom
@@ -56,7 +60,10 @@ export const buildPhantomDeepLink = (path: string, params: Record<string, string
 // Function to get the Phantom provider
 export const getPhantomProvider = (): PhantomProvider['solana'] | null => {
   if (typeof window === 'undefined') return null
+  // On mobile, we don't expect a provider
+  if (isMobileDevice()) return null
   console.log('Getting provider:', {
+    isMobile: isMobileDevice(),
     hasPhantom: 'phantom' in window,
     provider: window.phantom?.solana
   })

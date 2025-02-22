@@ -35,7 +35,7 @@ export function WalletButton({ className }: WalletButtonProps) {
       setIsPhantomAvailable(isAvailable)
       addDebugLog(`Phantom check - Available: ${isAvailable}`)
       addDebugLog(`Window.phantom: ${!!window.phantom}`)
-      addDebugLog(`Solana provider: ${!!window.phantom?.solana}`)
+      addDebugLog(`Mobile device: ${isMobileDevice()}`)
     }
 
     setIsMobile(isMobileDevice())
@@ -108,24 +108,27 @@ export function WalletButton({ className }: WalletButtonProps) {
         localStorage.setItem('phantom_session', response.session)
         setSession(response.session)
 
-        // Update wallet adapter state by connecting through provider
-        const provider = getPhantomProvider()
-
-        if (provider) {
-          addDebugLog('Connecting to provider...')
-          provider
-            .connect()
-            .then(() => {
-              addDebugLog('Connected successfully')
-            })
-            .catch(error => {
-              addDebugLog(`Error: ${error.message}`)
-              // Clear session if connection fails
-              localStorage.removeItem('phantom_session')
-              setSession(null)
-            })
+        // On mobile, we don't expect a provider
+        if (!isMobileDevice()) {
+          const provider = getPhantomProvider()
+          if (provider) {
+            addDebugLog('Connecting to provider...')
+            provider
+              .connect()
+              .then(() => {
+                addDebugLog('Connected successfully')
+              })
+              .catch(error => {
+                addDebugLog(`Error: ${error.message}`)
+                // Clear session if connection fails
+                localStorage.removeItem('phantom_session')
+                setSession(null)
+              })
+          } else {
+            addDebugLog('No provider found (expected on mobile)')
+          }
         } else {
-          addDebugLog('No provider found')
+          addDebugLog('Mobile connection successful')
         }
       } else {
         addDebugLog('Failed to handle response')
@@ -137,7 +140,7 @@ export function WalletButton({ className }: WalletButtonProps) {
     if (connected) {
       handleDisconnect()
     } else if (isMobile) {
-      // On mobile, use deep linking
+      // On mobile, always use deep linking
       addDebugLog('Initiating mobile deep link...')
       addDebugLog(`Current URL: ${window.location.href}`)
       connectPhantomMobile()
