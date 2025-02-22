@@ -78,20 +78,17 @@ export const connectPhantomMobile = () => {
   // Store the current URL for redirect
   localStorage.setItem('phantom_redirect_url', window.location.href)
 
-  // Construct the deep link parameters
-  const params = {
-    dapp_encryption_public_key: bs58.encode(dappKeyPair.publicKey),
-    redirect_link: window.location.href,
-    app_url: window.location.origin,
-    cluster: 'mainnet-beta'
-  }
+  // For mobile web browser flow, we need to construct the URL differently
+  const phantomConnectUrl = new URL('https://phantom.app/ul/v1/connect')
+  phantomConnectUrl.searchParams.append('app_url', window.location.origin)
+  phantomConnectUrl.searchParams.append('dapp_encryption_public_key', bs58.encode(dappKeyPair.publicKey))
+  phantomConnectUrl.searchParams.append('redirect_url', window.location.href)
+  phantomConnectUrl.searchParams.append('cluster', 'mainnet-beta')
 
-  // Build the URL using the buildPhantomDeepLink helper
-  const url = buildPhantomDeepLink('connect', params)
-  console.log('Connecting with URL:', url)
+  console.log('Connecting with URL:', phantomConnectUrl.toString())
 
   // For mobile browsers, we need to use window.location.href
-  window.location.href = url
+  window.location.href = phantomConnectUrl.toString()
 }
 
 interface PhantomResponseData {
