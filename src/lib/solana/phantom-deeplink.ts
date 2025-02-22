@@ -75,19 +75,13 @@ export const connectPhantomMobile = () => {
     })
   )
 
-  // Store the current URL as the redirect URL
-  const currentUrl = window.location.href
-  localStorage.setItem('phantom_redirect_url', currentUrl)
+  // For mobile web browser flow, we need to use the /browse endpoint
+  const encodedUrl = encodeURIComponent(
+    `https://phantom.app/ul/v1/connect?dapp_encryption_public_key=${bs58.encode(dappKeyPair.publicKey)}&redirect_link=${encodeURIComponent(window.location.href)}&app_url=${encodeURIComponent(window.location.origin)}&cluster=mainnet-beta`
+  )
 
-  // Construct URL exactly as shown in documentation
-  const params = new URLSearchParams({
-    dapp_encryption_public_key: bs58.encode(dappKeyPair.publicKey),
-    redirect_link: currentUrl,
-    app_url: window.location.origin,
-    cluster: 'mainnet-beta'
-  })
-
-  const url = `${PHANTOM_DEEPLINK_BASE_URL}/v1/connect?${params.toString()}`
+  // Construct the final URL
+  const url = `${PHANTOM_DEEPLINK_BASE_URL}/browse/${encodedUrl}`
   console.log('Connecting with URL:', url)
 
   // For mobile browsers, we need to use window.location.href

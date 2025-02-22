@@ -75,16 +75,16 @@ export function WalletButton({ className }: WalletButtonProps) {
     addDebugLog(`Current URL: ${url}`)
 
     // Check for both direct parameters and hash parameters
-    const hasPhantomParams =
-      url.includes('phantom_encryption_public_key') || url.includes('#phantom_encryption_public_key')
+    const hasPhantomParams = url.includes('phantom_encryption_public_key')
 
     if (hasPhantomParams) {
       addDebugLog('Found Phantom response parameters')
-      // If the parameters are in the hash, convert them to search params
-      const finalUrl = url.includes('#') ? url.replace('#', '?') : url
-      addDebugLog(`Processing URL: ${finalUrl}`)
 
-      const response = handlePhantomResponse(finalUrl, addDebugLog)
+      // Get the raw URL without any hash
+      const baseUrl = url.split('#')[0]
+      addDebugLog(`Processing URL: ${baseUrl}`)
+
+      const response = handlePhantomResponse(baseUrl, addDebugLog)
 
       if (response) {
         addDebugLog(`Got public key: ${response.publicKey.slice(0, 10)}...`)
@@ -114,6 +114,7 @@ export function WalletButton({ className }: WalletButtonProps) {
                 addDebugLog(`Connection error: ${error instanceof Error ? error.message : 'Unknown error'}`)
               }
             }
+            addDebugLog('Provider not found, retrying...')
             // Wait 500ms before trying again
             await new Promise(resolve => setTimeout(resolve, 500))
           }
