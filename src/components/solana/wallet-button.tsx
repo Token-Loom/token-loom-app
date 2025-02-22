@@ -4,6 +4,8 @@ import { useWallet } from '@solana/wallet-adapter-react'
 import { useWalletModal } from '@solana/wallet-adapter-react-ui'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
+import { useEffect, useState } from 'react'
+import { checkForPhantom, isMobileDevice, connectPhantomMobile } from '@/lib/solana/phantom-deeplink'
 
 interface WalletButtonProps {
   className?: string
@@ -12,12 +14,26 @@ interface WalletButtonProps {
 export function WalletButton({ className }: WalletButtonProps) {
   const { publicKey, disconnect } = useWallet()
   const { setVisible } = useWalletModal()
+  const [isPhantomAvailable, setIsPhantomAvailable] = useState(false)
+  const [isMobile, setIsMobile] = useState(false)
+
+  useEffect(() => {
+    setIsPhantomAvailable(checkForPhantom())
+    setIsMobile(isMobileDevice())
+  }, [])
 
   const handleClick = () => {
     if (publicKey) {
       disconnect()
-    } else {
+    } else if (isMobile) {
+      // On mobile, use deep linking
+      connectPhantomMobile()
+    } else if (isPhantomAvailable) {
+      // On desktop with Phantom installed, use wallet adapter
       setVisible(true)
+    } else {
+      // If Phantom is not installed, redirect to install page
+      window.open('https://phantom.app/', '_blank')
     }
   }
 
