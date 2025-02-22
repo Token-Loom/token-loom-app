@@ -4,6 +4,7 @@ import { FC, ReactNode, useMemo } from 'react'
 import { ConnectionProvider, WalletProvider } from '@solana/wallet-adapter-react'
 import { WalletModalProvider } from '@solana/wallet-adapter-react-ui'
 import { PhantomWalletAdapter, SolflareWalletAdapter } from '@solana/wallet-adapter-wallets'
+import { PublicKey } from '@solana/web3.js'
 
 // Import wallet adapter CSS
 import '@solana/wallet-adapter-react-ui/styles.css'
@@ -37,6 +38,14 @@ export const SolanaWalletProvider: FC<Props> = ({ children }) => {
               localStorage.setItem('phantom_redirect_url', window.location.href)
             }
             return uri
+          }
+        },
+        onAccountChange: (publicKey: PublicKey | null) => {
+          if (publicKey) {
+            // Update stored public key when account changes
+            localStorage.setItem('phantom_public_key', publicKey.toBase58())
+          } else {
+            localStorage.removeItem('phantom_public_key')
           }
         }
       }),

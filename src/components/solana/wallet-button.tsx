@@ -52,11 +52,6 @@ export function WalletButton({ className }: WalletButtonProps) {
     }
   }, [])
 
-  const handleDisconnect = useCallback(async () => {
-    localStorage.removeItem('phantom_public_key')
-    disconnect()
-  }, [disconnect])
-
   useEffect(() => {
     if (typeof window === 'undefined') return
 
@@ -100,6 +95,20 @@ export function WalletButton({ className }: WalletButtonProps) {
       }
     }
   }, [isMobile, select, wallets])
+
+  useEffect(() => {
+    if (!connected && localStorage.getItem('phantom_public_key')) {
+      const phantomWallet = wallets.find(w => w.adapter.name === 'Phantom')
+      if (phantomWallet) {
+        select(phantomWallet.adapter.name)
+      }
+    }
+  }, [connected, select, wallets])
+
+  const handleDisconnect = useCallback(async () => {
+    localStorage.removeItem('phantom_public_key')
+    disconnect()
+  }, [disconnect])
 
   const handleClick = () => {
     if (connected) {
