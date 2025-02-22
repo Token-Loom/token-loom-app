@@ -87,9 +87,14 @@ export const connectPhantomMobile = () => {
     cluster: 'mainnet-beta'
   })
 
-  // Direct connection URL for mobile
-  const phantomUrl = `https://phantom.app/ul/v1/connect?${params.toString()}`
-  window.location.href = phantomUrl
+  // Create the connection URL
+  const phantomConnectUrl = `https://phantom.app/ul/v1/connect?${params.toString()}`
+
+  // For mobile web, we need to use the browse endpoint
+  const encodedUrl = encodeURIComponent(window.location.href)
+  const deepLink = `https://phantom.app/ul/browse/${encodedUrl}?ref=${encodeURIComponent(phantomConnectUrl)}`
+
+  window.location.href = deepLink
 }
 
 interface PhantomResponseData {
