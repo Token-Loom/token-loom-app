@@ -141,10 +141,10 @@ export function WalletButton({ className }: WalletButtonProps) {
       </Button>
       {/* Debug Overlay */}
       {isMobile && (
-        <div className='fixed bottom-0 left-0 right-0 bg-black/80 text-white p-4 text-sm font-mono z-50'>
-          <div className='max-w-full overflow-x-auto'>
+        <div className='fixed bottom-16 left-4 right-4 bg-black/80 text-white p-2 text-xs font-mono z-50 rounded-lg mb-4 max-h-32 overflow-y-auto'>
+          <div className='max-w-full'>
             {debugLogs.map((log, i) => (
-              <div key={i} className='whitespace-nowrap'>
+              <div key={i} className='whitespace-pre-wrap break-words'>
                 {log}
               </div>
             ))}
