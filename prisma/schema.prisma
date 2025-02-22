@@ -1,9 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -14,7 +8,6 @@ datasource db {
   directUrl = env("DIRECT_URL")
 }
 
-// Optional user model for registered users
 model User {
   id               String            @id @default(uuid())
   walletAddress    String            @unique
@@ -28,44 +21,38 @@ model User {
   notifications    Notification[]
 }
 
-// System configuration
 model SystemConfig {
   id          String   @id @default(uuid())
   maxRetries  Int      @default(3)
-  retryDelay  Int      @default(300) // in seconds
+  retryDelay  Int      @default(300)
   maxWorkers  Int      @default(10)
   isRunning   Boolean  @default(true)
   lastUpdated DateTime @updatedAt
 }
 
-// Burn wallets for token burning
 model BurnWallet {
   id            String            @id @default(uuid())
   walletAddress String            @unique
-  privateKey    String // Note: This should be encrypted in production
+  privateKey    String
   createdAt     DateTime          @default(now())
   isActive      Boolean           @default(true)
   transactions  BurnTransaction[]
 }
 
-// Individual burn transactions
 model BurnTransaction {
   id             String          @id @default(uuid())
   userWallet     String?
-  user           User?           @relation(fields: [userWallet], references: [walletAddress])
   tokenMint      String
   tokenName      String
   tokenSymbol    String
   tokenType      TokenType       @default(REGULAR)
-  // LP token specific fields
-  lpToken0Mint   String? // First token in the LP pair
-  lpToken1Mint   String? // Second token in the LP pair
-  lpToken0Symbol String? // Symbol of first token
-  lpToken1Symbol String? // Symbol of second token
-  lpPoolAddress  String? // Address of the liquidity pool
-  amount         Decimal // Total amount to be burned
+  lpToken0Mint   String?
+  lpToken1Mint   String?
+  lpToken0Symbol String?
+  lpToken1Symbol String?
+  lpPoolAddress  String?
+  amount         Decimal
   burnWalletId   String
-  burnWallet     BurnWallet      @relation(fields: [burnWalletId], references: [id])
   txSignature    String          @unique
   status         BurnStatus
   burnType       BurnType
@@ -73,34 +60,32 @@ model BurnTransaction {
   burnMessage    String?
   createdAt      DateTime        @default(now())
   confirmedAt    DateTime?
-  scheduledBurns ScheduledBurn[]
   executions     BurnExecution[]
+  burnWallet     BurnWallet      @relation(fields: [burnWalletId], references: [id])
+  user           User?           @relation(fields: [userWallet], references: [walletAddress])
   notifications  Notification[]
+  scheduledBurns ScheduledBurn[]
 }
 
-// Individual scheduled burns
 model ScheduledBurn {
   id            String          @id @default(uuid())
   transactionId String
-  transaction   BurnTransaction @relation(fields: [transactionId], references: [id])
-  scheduledFor  DateTime // Date and time of the burn
-  amount        Decimal // Amount to burn at this time
+  scheduledFor  DateTime
+  amount        Decimal
   status        BurnStatus      @default(PENDING)
-  executedAt    DateTime? // When the burn was actually executed
+  executedAt    DateTime?
   createdAt     DateTime        @default(now())
   retryCount    Int             @default(0)
   nextRetryAt   DateTime?
   errorMessage  String?
   executions    BurnExecution[]
+  transaction   BurnTransaction @relation(fields: [transactionId], references: [id])
 }
 
-// Execution history for burns
 model BurnExecution {
   id              String          @id @default(uuid())
   transactionId   String
-  transaction     BurnTransaction @relation(fields: [transactionId], references: [id])
   scheduledBurnId String?
-  scheduledBurn   ScheduledBurn?  @relation(fields: [scheduledBurnId], references: [id])
   status          ExecutionStatus
   txSignature     String?
   errorMessage    String?
@@ -108,23 +93,23 @@ model BurnExecution {
   completedAt     DateTime?
   gasUsed         Decimal?
   retryCount      Int             @default(0)
+  scheduledBurn   ScheduledBurn?  @relation(fields: [scheduledBurnId], references: [id])
+  transaction     BurnTransaction @relation(fields: [transactionId], references: [id])
 }
 
-// Notifications for burn events
 model Notification {
   id            String           @id @default(uuid())
   userId        String
-  user          User             @relation(fields: [userId], references: [id])
   transactionId String
-  transaction   BurnTransaction  @relation(fields: [transactionId], references: [id])
   type          NotificationType
   message       String
   createdAt     DateTime         @default(now())
   sentAt        DateTime?
   error         String?
+  transaction   BurnTransaction  @relation(fields: [transactionId], references: [id])
+  user          User             @relation(fields: [userId], references: [id])
 }
 
-// Statistics for each token
 model BurnStatistic {
   id                 String    @id @default(uuid())
   tokenMint          String    @unique
@@ -136,7 +121,6 @@ model BurnStatistic {
   controlledBurns    Int       @default(0)
   totalFeesCollected Decimal   @default(0)
   lastUpdated        DateTime  @updatedAt
-  // LP token specific fields
   lpToken0Mint       String?
   lpToken1Mint       String?
   lpToken0Symbol     String?
@@ -144,7 +128,6 @@ model BurnStatistic {
   lpPoolAddress      String?
 }
 
-// Global statistics
 model GlobalStatistic {
   id                   String   @id @default(uuid())
   totalTokensBurned    Int      @default(0)
@@ -158,7 +141,6 @@ model GlobalStatistic {
   lastUpdated          DateTime @updatedAt
 }
 
-// Token metrics for analytics
 model TokenMetric {
   id                String   @id @default(uuid())
   tokenMint         String   @unique
