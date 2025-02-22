@@ -2,7 +2,7 @@ import { Connection, PublicKey, Transaction, ParsedAccountData } from '@solana/w
 import { createBurnInstruction } from '@solana/spl-token'
 import { BN } from 'bn.js'
 import { createFeeInstruction } from './fees'
-import { isAdminWallet } from './admin'
+import { isAdminWallet } from './admin-config'
 import { isLPToken } from './tokens'
 
 interface ParsedTokenAccountData {

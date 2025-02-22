@@ -1,5 +1,5 @@
 import { Connection, PublicKey, SystemProgram } from '@solana/web3.js'
-import { isAdminWallet } from './admin'
+import { isAdminWallet } from './admin-config'
 
 const PAYMENT_WALLET = process.env.NEXT_PUBLIC_PAYMENT_WALLET || ''
 if (!PAYMENT_WALLET) {

@@ -2,7 +2,7 @@ import { Connection, PublicKey, Transaction, ParsedAccountData } from '@solana/w
 import { TOKEN_PROGRAM_ID, createBurnInstruction, getAssociatedTokenAddress } from '@solana/spl-token'
 import { BN } from 'bn.js'
 import { createFeeInstruction, checkSufficientBalance } from './fees'
-import { isAdminWallet } from './admin'
+import { isAdminWallet } from './admin-config'
 
 export interface BurnTokenParams {
   connection: Connection

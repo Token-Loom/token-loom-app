@@ -22,7 +22,7 @@ import { burnTokens } from '@/lib/solana/burn'
 import { useToast } from '@/hooks/use-toast'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Loader2 } from 'lucide-react'
-import { isAdminWallet } from '@/lib/solana/admin'
+import { isAdminWallet } from '@/lib/solana/admin-config'
 import { burnLPTokens } from '@/lib/solana/lp-burn'
 import { TokenType, LPTokenInfo } from '@/lib/types/burn'
 
