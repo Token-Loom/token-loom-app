@@ -10,8 +10,7 @@ import {
   checkForPhantom,
   isMobileDevice,
   connectPhantomMobile,
-  handlePhantomResponse,
-  getPhantomProvider
+  handlePhantomResponse
 } from '@/lib/solana/phantom-deeplink'
 
 interface WalletButtonProps {
@@ -32,9 +31,32 @@ export function WalletButton({ className }: WalletButtonProps) {
   const [debugLogs, setDebugLogs] = useState<string[]>([])
 
   const addDebugLog = (message: string) => {
-    console.log('Debug:', message) // Also log to console for debugging
-    setDebugLogs(prev => [...prev.slice(-4), message]) // Keep last 5 messages
+    console.log('Debug:', message)
+    setDebugLogs(prev => [...prev.slice(-4), message])
   }
+
+  // Check for saved connection state on mount
+  useEffect(() => {
+    const savedPublicKey = localStorage.getItem('phantom_public_key')
+    if (savedPublicKey && !connected) {
+      try {
+        const publicKey = new PublicKey(savedPublicKey)
+        const phantomWallet = wallets.find(w => w.adapter.name === 'Phantom')
+        if (phantomWallet) {
+          addDebugLog('Restoring saved connection')
+          select(phantomWallet.adapter.name)
+          const adapter = phantomWallet.adapter as unknown as PhantomAdapter
+          adapter.publicKey = publicKey
+          adapter.connected = true
+          addDebugLog('Connection restored')
+        }
+      } catch (err) {
+        const errorMessage = err instanceof Error ? err.message : 'Unknown error'
+        addDebugLog(`Failed to restore connection: ${errorMessage}`)
+        localStorage.removeItem('phantom_public_key')
+      }
+    }
+  }, [wallets, select, connected])
 
   useEffect(() => {
     const checkPhantom = () => {
@@ -51,104 +73,61 @@ export function WalletButton({ className }: WalletButtonProps) {
     addDebugLog(`Screen: ${window.innerWidth}x${window.innerHeight}`)
     checkPhantom()
 
-    // Add orientation change listener
-    const handleOrientationChange = () => {
-      addDebugLog(`Orientation changed: ${window.innerWidth}x${window.innerHeight}`)
-      checkPhantom()
-    }
-
-    window.addEventListener('orientationchange', handleOrientationChange)
-    window.addEventListener('resize', handleOrientationChange)
-
-    return () => {
-      window.removeEventListener('orientationchange', handleOrientationChange)
-      window.removeEventListener('resize', handleOrientationChange)
-    }
-  }, [])
-
-  const handleDisconnect = useCallback(async () => {
-    // Clear storage
-    localStorage.removeItem('phantom_public_key')
-    disconnect()
-  }, [disconnect])
-
-  // Handle Phantom connection response
-  useEffect(() => {
-    if (typeof window === 'undefined') return
-
-    // Check if we're returning from a Phantom connection
+    // Check for Phantom response on page load
     const url = window.location.href
-    addDebugLog(`Checking URL: ${url.slice(0, 50)}...`)
-
     if (url.includes('phantom_encryption_public_key')) {
       addDebugLog('Found Phantom response')
       const response = handlePhantomResponse(url, addDebugLog)
 
       if (response) {
         addDebugLog(`Got public key: ${response.publicKey.slice(0, 10)}...`)
-        // Clean up the URL
-        window.history.replaceState({}, '', window.location.origin)
 
-        // Store public key
+        // Get the original URL we were on
+        const redirectUrl = localStorage.getItem('phantom_redirect_url')
+
+        // Clean up storage
+        localStorage.removeItem('phantom_redirect_url')
+
+        // Clean up the URL and restore original path
+        if (redirectUrl) {
+          window.history.replaceState({}, '', redirectUrl)
+        } else {
+          window.history.replaceState({}, '', window.location.origin)
+        }
+
+        // Store public key for connection restoration
         localStorage.setItem('phantom_public_key', response.publicKey)
 
         // Update wallet adapter state
-        if (isMobile) {
-          try {
-            const phantomWallet = wallets.find(w => w.adapter.name === 'Phantom')
-            if (phantomWallet) {
-              addDebugLog('Found Phantom wallet adapter')
-              select(phantomWallet.adapter.name)
-              addDebugLog('Selected Phantom wallet')
-
-              // Force connection state
-              const publicKey = new PublicKey(response.publicKey)
-              const adapter = phantomWallet.adapter as unknown as PhantomAdapter
-              adapter.publicKey = publicKey
-              adapter.connected = true
-              addDebugLog('Set connection state')
-            } else {
-              addDebugLog('Phantom wallet not found in adapter list')
-            }
-          } catch (error) {
-            addDebugLog(`Error setting wallet state: ${error instanceof Error ? error.message : 'Unknown error'}`)
-          }
-        } else {
-          const provider = getPhantomProvider()
-          if (provider) {
-            addDebugLog('Connecting to provider...')
-            provider
-              .connect()
-              .then(() => {
-                addDebugLog('Connected successfully')
-              })
-              .catch(error => {
-                addDebugLog(`Error: ${error.message}`)
-                localStorage.removeItem('phantom_public_key')
-              })
-          } else {
-            addDebugLog('No provider found (expected on mobile)')
-          }
+        const phantomWallet = wallets.find(w => w.adapter.name === 'Phantom')
+        if (phantomWallet) {
+          addDebugLog('Found Phantom wallet adapter')
+          select(phantomWallet.adapter.name)
+          const adapter = phantomWallet.adapter as unknown as PhantomAdapter
+          adapter.publicKey = new PublicKey(response.publicKey)
+          adapter.connected = true
+          addDebugLog('Set connection state')
         }
-      } else {
-        addDebugLog('Failed to handle response')
       }
     }
-  }, [isMobile, select, wallets])
+  }, [wallets, select])
+
+  const handleDisconnect = useCallback(() => {
+    localStorage.removeItem('phantom_public_key')
+    disconnect()
+    addDebugLog('Disconnected')
+  }, [disconnect])
 
   const handleClick = () => {
     if (connected) {
       handleDisconnect()
     } else if (isMobile) {
-      // On mobile, always use deep linking
       addDebugLog('Initiating mobile deep link...')
       addDebugLog(`Current URL: ${window.location.href}`)
       connectPhantomMobile()
     } else if (isPhantomAvailable) {
-      // On desktop with Phantom installed, use wallet adapter
       setVisible(true)
     } else {
-      // If Phantom is not installed, redirect to install page
       window.open('https://phantom.app/', '_blank')
     }
   }
@@ -168,7 +147,7 @@ export function WalletButton({ className }: WalletButtonProps) {
           : 'Connect Wallet'}
       </Button>
       {/* Debug Overlay */}
-      <div className='fixed h-[600px] top-14 left-0 right-0 bg-black/80 text-white p-2 text-xs font-mono z-[100] border-t border-purple-500'>
+      <div className='fixed bottom-0 left-0 right-0 bg-black/80 text-white p-2 text-xs font-mono z-[100] border-t border-purple-500'>
         <div className='max-w-full overflow-y-auto max-h-32'>
           {debugLogs.map((log, i) => (
             <div key={i} className='whitespace-pre-wrap break-words'>
