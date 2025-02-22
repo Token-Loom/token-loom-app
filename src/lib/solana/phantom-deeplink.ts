@@ -92,19 +92,20 @@ export const connectPhantomMobile = () => {
     })
   )
 
-  // Use absolute URL without any parameters for redirect
-  const redirectUrl = `${window.location.origin}${window.location.pathname}`
-  localStorage.setItem('phantom_redirect_url', redirectUrl)
+  // For mobile web browser flow, we need to use a special URL format
+  const currentUrl = window.location.href
+  const appUrl = window.location.origin
 
-  // Construct URL exactly as shown in documentation
+  // Construct URL for mobile web browser flow
   const params = new URLSearchParams({
     dapp_encryption_public_key: bs58.encode(dappKeyPair.publicKey),
-    redirect_link: redirectUrl,
-    app_url: window.location.origin,
+    redirect_link: currentUrl,
+    app_url: appUrl,
     cluster: 'mainnet-beta'
   })
 
-  const url = `${PHANTOM_DEEPLINK_BASE_URL}/v1/connect?${params.toString()}`
+  // Use phantom.app/ul/browse/ endpoint for mobile web browser flow
+  const url = `${PHANTOM_DEEPLINK_BASE_URL}/browse/${appUrl}?${params.toString()}`
 
   console.log('Opening Phantom URL:', url)
 
