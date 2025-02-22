@@ -38,10 +38,20 @@ const config = {
         glow: {
           '0%, 100%': { boxShadow: '0 0 10px rgba(153,69,255,0.3)' },
           '50%': { boxShadow: '0 0 20px rgba(153,69,255,0.5)' }
+        },
+        shimmer: {
+          '0%': { transform: 'translateX(-100%)' },
+          '100%': { transform: 'translateX(100%)' }
+        },
+        pulse: {
+          '0%, 100%': { opacity: '1' },
+          '50%': { opacity: '0.5' }
         }
       },
       animation: {
-        glow: 'glow 2s ease-in-out infinite'
+        glow: 'glow 2s ease-in-out infinite',
+        shimmer: 'shimmer 2s linear infinite',
+        pulse: 'pulse 4s ease-in-out infinite'
       }
     }
   },
