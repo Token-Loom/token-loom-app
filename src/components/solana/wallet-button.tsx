@@ -72,14 +72,23 @@ export function WalletButton({ className }: WalletButtonProps) {
 
     // Check if we're returning from a Phantom connection
     const url = window.location.href
-    addDebugLog(`Checking URL: ${url.slice(0, 50)}...`)
+    addDebugLog(`Current URL: ${url}`)
 
-    if (url.includes('phantom_encryption_public_key')) {
-      addDebugLog('Found Phantom response')
-      const response = handlePhantomResponse(url, addDebugLog)
+    // Check for both direct parameters and hash parameters
+    const hasPhantomParams =
+      url.includes('phantom_encryption_public_key') || url.includes('#phantom_encryption_public_key')
+
+    if (hasPhantomParams) {
+      addDebugLog('Found Phantom response parameters')
+      // If the parameters are in the hash, convert them to search params
+      const finalUrl = url.includes('#') ? url.replace('#', '?') : url
+      addDebugLog(`Processing URL: ${finalUrl}`)
+
+      const response = handlePhantomResponse(finalUrl, addDebugLog)
 
       if (response) {
         addDebugLog(`Got public key: ${response.publicKey.slice(0, 10)}...`)
+
         // Clean up the URL
         window.history.replaceState({}, '', window.location.origin)
 
@@ -96,8 +105,8 @@ export function WalletButton({ className }: WalletButtonProps) {
             if (provider) {
               addDebugLog('Found provider, connecting...')
               try {
-                await provider.connect()
-                addDebugLog('Connected successfully')
+                const result = await provider.connect()
+                addDebugLog(`Connected successfully: ${result.publicKey.toString()}`)
                 // Force a refresh of isPhantomAvailable
                 setIsPhantomAvailable(true)
                 return
