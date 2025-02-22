@@ -1,6 +1,6 @@
 'use client'
 
-import { FC, ReactNode, useMemo, useEffect } from 'react'
+import { FC, ReactNode, useMemo, useEffect, useCallback } from 'react'
 import { ConnectionProvider, WalletProvider } from '@solana/wallet-adapter-react'
 import { WalletModalProvider } from '@solana/wallet-adapter-react-ui'
 import { PhantomWalletAdapter, SolflareWalletAdapter } from '@solana/wallet-adapter-wallets'
@@ -19,6 +19,16 @@ export const SolanaWalletProvider: FC<Props> = ({ children }) => {
     return process.env.NEXT_PUBLIC_RPC_ENDPOINT || 'https://api.mainnet-beta.solana.com'
   }, [])
 
+  // Handle redirect after wallet connection
+  const handleRedirect = useCallback((uri: string) => {
+    if (typeof window !== 'undefined') {
+      const currentUrl = window.location.href
+      console.log('Storing return URL:', currentUrl)
+      localStorage.setItem('wallet_adapter_return_url', currentUrl)
+    }
+    return uri
+  }, [])
+
   // Initialize supported wallets with mobile configuration
   const wallets = useMemo(
     () => [
@@ -30,39 +40,21 @@ export const SolanaWalletProvider: FC<Props> = ({ children }) => {
         },
         mobile: {
           enabled: true,
-          getUri: (uri: string) => {
-            if (typeof window !== 'undefined') {
-              // Store both the redirect URL and a timestamp to handle stale redirects
-              const redirectData = {
-                url: window.location.href,
-                timestamp: Date.now(),
-                connecting: true
-              }
-              localStorage.setItem('phantom_redirect_data', JSON.stringify(redirectData))
-            }
-            return uri
-          }
+          getUri: handleRedirect
         }
       }),
       new SolflareWalletAdapter()
     ],
-    []
+    [handleRedirect]
   )
 
-  // Handle redirect cleanup and reconnection
+  // Handle return from wallet connection
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      const redirectData = localStorage.getItem('phantom_redirect_data')
-      if (redirectData) {
-        try {
-          const { timestamp, connecting } = JSON.parse(redirectData)
-          // Clear stale redirect data (older than 5 minutes)
-          if (Date.now() - timestamp > 5 * 60 * 1000 || !connecting) {
-            localStorage.removeItem('phantom_redirect_data')
-          }
-        } catch {
-          localStorage.removeItem('phantom_redirect_data')
-        }
+      const returnUrl = localStorage.getItem('wallet_adapter_return_url')
+      if (returnUrl) {
+        console.log('Returning from wallet connection, stored URL:', returnUrl)
+        localStorage.removeItem('wallet_adapter_return_url')
       }
     }
   }, [])
@@ -71,11 +63,9 @@ export const SolanaWalletProvider: FC<Props> = ({ children }) => {
     <ConnectionProvider endpoint={endpoint}>
       <WalletProvider
         wallets={wallets}
-        autoConnect={false} // Disable autoConnect to prevent race conditions
+        autoConnect={true}
         onError={error => {
-          console.error('Wallet error:', error)
-          // Clear redirect data on error
-          localStorage.removeItem('phantom_redirect_data')
+          console.error('Wallet connection error:', error)
         }}
       >
         <WalletModalProvider>{children}</WalletModalProvider>
