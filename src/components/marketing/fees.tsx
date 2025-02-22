@@ -34,10 +34,10 @@ export function Fees() {
       <div className='absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-[#9945FF]/10 via-[#14F195]/5 to-transparent' />
       <div className='container relative'>
         <div className='mx-auto max-w-4xl text-center'>
-          <h2 className='font-display mb-4 bg-gradient-to-r from-[#9945FF] via-[#14F195] to-[#00C2FF] bg-clip-text text-3xl font-bold text-transparent sm:text-4xl'>
+          <h2 className='font-display mb-3 sm:mb-4 text-2xl sm:text-3xl font-bold tracking-tight text-[#E6E6E6] md:text-4xl'>
             Simple, Transparent Pricing
           </h2>
-          <p className='mx-auto mb-12 max-w-2xl text-[#A3A3A3] sm:text-lg'>
+          <p className='text-base sm:text-lg text-[#E6E6E6]/60'>
             Choose between immediate execution or controlled scheduling. One simple fee, no hidden costs.
           </p>
           <div className='grid gap-8 sm:grid-cols-2'>

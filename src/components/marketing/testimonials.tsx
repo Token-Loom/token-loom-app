@@ -30,8 +30,10 @@ export function Testimonials() {
     <section className='py-16'>
       <div className='container'>
         <div className='text-center'>
-          <h2 className='font-display mb-4 text-3xl font-bold text-[#E6E6E6] sm:text-4xl'>What Our Users Say</h2>
-          <p className='mx-auto max-w-2xl text-[#A3A3A3]'>
+          <h2 className='font-display mb-3 sm:mb-4 text-2xl sm:text-3xl font-bold tracking-tight text-[#E6E6E6] md:text-4xl'>
+            What Our Users Say
+          </h2>
+          <p className='text-base sm:text-lg text-[#E6E6E6]/60'>
             Join hundreds of projects that have successfully managed their token supply using our platform.
           </p>
         </div>
