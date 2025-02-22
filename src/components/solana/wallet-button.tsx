@@ -29,11 +29,13 @@ export function WalletButton({ className }: WalletButtonProps) {
   const { setVisible } = useWalletModal()
   const [isPhantomAvailable, setIsPhantomAvailable] = useState(false)
   const [isMobile, setIsMobile] = useState(false)
+  const [isPhantomBrowser, setIsPhantomBrowser] = useState(false)
 
   useEffect(() => {
     const checkPhantom = () => {
       const isAvailable = checkForPhantom()
       setIsPhantomAvailable(isAvailable)
+      setIsPhantomBrowser(window.navigator.userAgent.includes('PhantomBrowser'))
     }
 
     setIsMobile(isMobileDevice())
@@ -68,6 +70,15 @@ export function WalletButton({ className }: WalletButtonProps) {
         currentUrl.searchParams.delete('errorCode')
         currentUrl.searchParams.delete('errorMessage')
 
+        if (isPhantomBrowser) {
+          const redirectUrl = localStorage.getItem('phantom_redirect_url')
+          if (redirectUrl) {
+            localStorage.removeItem('phantom_redirect_url')
+            window.location.href = redirectUrl
+            return
+          }
+        }
+
         window.history.replaceState({}, '', currentUrl.toString())
 
         localStorage.setItem('phantom_public_key', response.publicKey)
@@ -94,7 +105,7 @@ export function WalletButton({ className }: WalletButtonProps) {
         }
       }
     }
-  }, [isMobile, select, wallets])
+  }, [isMobile, select, wallets, isPhantomBrowser])
 
   useEffect(() => {
     if (!connected && localStorage.getItem('phantom_public_key')) {
@@ -107,6 +118,7 @@ export function WalletButton({ className }: WalletButtonProps) {
 
   const handleDisconnect = useCallback(async () => {
     localStorage.removeItem('phantom_public_key')
+    localStorage.removeItem('phantom_redirect_url')
     disconnect()
   }, [disconnect])
 
@@ -114,6 +126,7 @@ export function WalletButton({ className }: WalletButtonProps) {
     if (connected) {
       handleDisconnect()
     } else if (isMobile) {
+      localStorage.setItem('phantom_redirect_url', window.location.href)
       connectPhantomMobile()
     } else if (isPhantomAvailable) {
       setVisible(true)

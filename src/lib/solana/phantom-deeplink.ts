@@ -106,12 +106,18 @@ export const connectPhantomMobile = () => {
 
   // For mobile web browser, we need to use a special format
   const phantomUrl = `https://phantom.app/ul/v1/connect?${params.toString()}`
-  const deepLink = `https://phantom.app/ul/browse/${encodedUrl}?ref=${encodeURIComponent(phantomUrl)}`
 
-  console.log('Opening Phantom URL:', deepLink)
+  // Check if we're already in the Phantom in-app browser
+  const isPhantomInAppBrowser = window.navigator.userAgent.includes('PhantomBrowser')
 
-  // For mobile browsers, redirect to Phantom
-  window.location.href = deepLink
+  if (isPhantomInAppBrowser) {
+    // If we're in Phantom's browser, redirect directly back to the app
+    window.location.href = currentUrl
+  } else {
+    // If we're in the regular browser, use the deep link
+    const deepLink = `https://phantom.app/ul/browse/${encodedUrl}?ref=${encodeURIComponent(phantomUrl)}`
+    window.location.href = deepLink
+  }
 }
 
 interface PhantomResponseData {
