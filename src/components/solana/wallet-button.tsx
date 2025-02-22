@@ -104,12 +104,8 @@ export function WalletButton({ className }: WalletButtonProps) {
   const handleClick = () => {
     if (connected) {
       handleDisconnect()
-    } else if (isMobile) {
-      connectPhantomMobile()
-    } else if (isPhantomAvailable) {
-      setVisible(true)
     } else {
-      window.open('https://phantom.app/', '_blank')
+      setVisible(true)
     }
   }
 
