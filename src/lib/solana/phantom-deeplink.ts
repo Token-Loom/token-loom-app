@@ -1,10 +1,24 @@
+import nacl from 'tweetnacl'
+import bs58 from 'bs58'
+import { Buffer } from 'buffer'
+import { PublicKey, Transaction } from '@solana/web3.js'
+
 // Base URL for Phantom deep links
 const PHANTOM_DEEPLINK_BASE_URL = 'https://phantom.app/ul'
 
 interface PhantomProvider {
   isPhantom?: boolean
+  publicKey?: PublicKey
+  isConnected?: boolean
+  signTransaction?: (transaction: Transaction) => Promise<Transaction>
+  signAllTransactions?: (transactions: Transaction[]) => Promise<Transaction[]>
+  signMessage?: (message: Uint8Array) => Promise<{ signature: Uint8Array }>
+  connect: (opts?: { onlyIfTrusted?: boolean }) => Promise<{ publicKey: PublicKey }>
+  disconnect: () => Promise<void>
   solana?: {
     isPhantom: boolean
+    connect: (opts?: { onlyIfTrusted?: boolean }) => Promise<{ publicKey: PublicKey }>
+    disconnect: () => Promise<void>
   }
 }
 
@@ -34,7 +48,7 @@ export const buildPhantomDeepLink = (path: string, params: Record<string, string
 }
 
 // Function to get the Phantom provider
-export const getPhantomProvider = () => {
+export const getPhantomProvider = (): PhantomProvider['solana'] | null => {
   if (typeof window === 'undefined') return null
   if ('phantom' in window) {
     const provider = window.phantom?.solana
@@ -49,12 +63,82 @@ export const getPhantomProvider = () => {
 export const connectPhantomMobile = () => {
   if (typeof window === 'undefined') return
 
+  // Generate a new keypair for this connection
+  const dappKeyPair = nacl.box.keyPair()
+
+  // Save keypair to session storage for retrieving after redirect
+  sessionStorage.setItem(
+    'phantom_keypair',
+    JSON.stringify({
+      publicKey: Buffer.from(dappKeyPair.publicKey).toString('hex'),
+      secretKey: Buffer.from(dappKeyPair.secretKey).toString('hex')
+    })
+  )
+
   const params: Record<string, string> = {
+    dapp_encryption_public_key: bs58.encode(dappKeyPair.publicKey),
+    redirect_link: window.location.href,
     app_url: window.location.origin,
-    redirect_url: window.location.href,
     cluster: 'mainnet-beta'
   }
 
   const deepLink = buildPhantomDeepLink('connect', params)
   window.location.href = deepLink
+}
+
+interface PhantomResponseData {
+  public_key: string
+  session: string
+}
+
+// Function to handle the connection response from Phantom
+export const handlePhantomResponse = (url: string): { publicKey: string; session: string } | null => {
+  try {
+    const urlParams = new URLSearchParams(new URL(url).search)
+    const data = urlParams.get('data')
+    const nonce = urlParams.get('nonce')
+    const phantomEncryptionPublicKey = urlParams.get('phantom_encryption_public_key')
+
+    // Check for error response
+    if (urlParams.get('errorCode')) {
+      throw new Error(urlParams.get('errorMessage') || 'Unknown error')
+    }
+
+    if (!data || !nonce || !phantomEncryptionPublicKey) {
+      throw new Error('Missing required parameters')
+    }
+
+    // Retrieve our keypair from session storage
+    const keypairString = sessionStorage.getItem('phantom_keypair')
+    if (!keypairString) {
+      throw new Error('No keypair found in session storage')
+    }
+
+    const keypair = JSON.parse(keypairString)
+    const dappSecretKey = new Uint8Array(Buffer.from(keypair.secretKey, 'hex'))
+
+    // Create shared secret
+    const sharedSecretDapp = nacl.box.before(bs58.decode(phantomEncryptionPublicKey), dappSecretKey)
+
+    // Decrypt the data
+    const decryptedData = nacl.box.open.after(bs58.decode(data), bs58.decode(nonce), sharedSecretDapp)
+
+    if (!decryptedData) {
+      throw new Error('Unable to decrypt data')
+    }
+
+    // Parse the decrypted data
+    const decodedData = JSON.parse(Buffer.from(decryptedData).toString('utf8')) as PhantomResponseData
+
+    // Clean up session storage
+    sessionStorage.removeItem('phantom_keypair')
+
+    return {
+      publicKey: decodedData.public_key,
+      session: decodedData.session
+    }
+  } catch (error) {
+    console.error('Error handling Phantom response:', error)
+    return null
+  }
 }
