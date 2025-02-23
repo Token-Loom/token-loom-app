@@ -75,22 +75,32 @@ export class BurnScheduler {
             status: BurnStatus.PENDING,
             scheduledFor: {
               lte: new Date()
-            },
-            OR: [{ nextRetryAt: null }, { nextRetryAt: { lte: new Date() } }],
-            retryCount: { lt: this.maxRetries }
+            }
           },
           include: {
             transaction: {
               include: {
                 burnWallet: true
               }
+            },
+            executions: {
+              orderBy: {
+                startedAt: 'desc'
+              },
+              take: 1
             }
           },
           take: this.maxWorkers - activeWorkers
         })
 
+        // Filter burns based on retry count
+        const eligibleBurns = pendingBurns.filter(burn => {
+          const retryCount = burn.executions.length
+          return retryCount < this.maxRetries
+        })
+
         // Process each pending burn
-        await Promise.all(pendingBurns.map(burn => this.executeBurn(burn)))
+        await Promise.all(eligibleBurns.map(burn => this.executeBurn(burn)))
 
         // Wait before next iteration
         await new Promise(resolve => setTimeout(resolve, 1000))
@@ -132,7 +142,7 @@ export class BurnScheduler {
       const signature = await burnTokens({
         connection: this.connection,
         tokenMint: burn.transaction.tokenMint,
-        amount: burn.amount.toString(),
+        amount: burn.transaction.amount.toString(),
         wallet: burnWallet.publicKey,
         signTransaction: async tx => {
           tx.sign(burnWallet)
@@ -177,7 +187,7 @@ export class BurnScheduler {
           userId: burn.transaction.userWallet || '',
           transactionId: burn.transactionId,
           type: NotificationType.BURN_COMPLETED,
-          message: `Successfully burned ${burn.amount} ${burn.transaction.tokenSymbol} tokens`
+          message: `Successfully burned ${burn.transaction.amount} ${burn.transaction.tokenSymbol} tokens`
         }
       })
     } catch (error: unknown) {
@@ -195,14 +205,17 @@ export class BurnScheduler {
       })
 
       // Schedule retry if under max retries
-      if (burn.retryCount < this.maxRetries) {
+      const retryCount = await prisma.burnExecution.count({
+        where: { scheduledBurnId: burn.id }
+      })
+
+      if (retryCount < this.maxRetries) {
         await prisma.scheduledBurn.update({
           where: { id: burn.id },
           data: {
             status: BurnStatus.RETRYING,
-            retryCount: { increment: 1 },
-            nextRetryAt: new Date(Date.now() + this.retryDelay * 1000),
-            errorMessage
+            scheduledFor: new Date(Date.now() + this.retryDelay * 1000),
+            error: errorMessage
           }
         })
       } else {
@@ -210,7 +223,7 @@ export class BurnScheduler {
           where: { id: burn.id },
           data: {
             status: BurnStatus.FAILED,
-            errorMessage
+            error: errorMessage
           }
         })
       }
@@ -221,7 +234,7 @@ export class BurnScheduler {
           userId: burn.transaction.userWallet || '',
           transactionId: burn.transactionId,
           type: NotificationType.BURN_FAILED,
-          message: `Failed to burn ${burn.amount} ${burn.transaction.tokenSymbol} tokens: ${errorMessage}`
+          message: `Failed to burn ${burn.transaction.amount} ${burn.transaction.tokenSymbol} tokens: ${errorMessage}`
         }
       })
     }
