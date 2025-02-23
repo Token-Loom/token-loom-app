@@ -23,7 +23,7 @@ export async function GET(request: Request) {
     const transactions = await prisma.burnTransaction.findMany({
       where,
       include: {
-        scheduledBurns: {
+        scheduledBurn: {
           include: {
             executions: true
           }
@@ -57,24 +57,23 @@ export async function GET(request: Request) {
       createdAt: tx.createdAt,
       confirmedAt: tx.confirmedAt,
       txSignature: tx.txSignature,
-      scheduledBurns: tx.scheduledBurns.map(burn => ({
-        id: burn.id,
-        scheduledFor: burn.scheduledFor,
-        amount: burn.amount.toString(),
-        status: burn.status,
-        executedAt: burn.executedAt,
-        retryCount: burn.retryCount,
-        nextRetryAt: burn.nextRetryAt,
-        errorMessage: burn.errorMessage,
-        executions: burn.executions.map(exec => ({
-          id: exec.id,
-          status: exec.status,
-          txSignature: exec.txSignature,
-          startedAt: exec.startedAt,
-          completedAt: exec.completedAt,
-          errorMessage: exec.errorMessage
-        }))
-      })),
+      scheduledBurn: tx.scheduledBurn
+        ? {
+            id: tx.scheduledBurn.id,
+            scheduledFor: tx.scheduledBurn.scheduledFor,
+            status: tx.scheduledBurn.status,
+            executedAt: tx.scheduledBurn.executedAt,
+            error: tx.scheduledBurn.error,
+            executions: tx.scheduledBurn.executions.map(exec => ({
+              id: exec.id,
+              status: exec.status,
+              txSignature: exec.txSignature,
+              startedAt: exec.startedAt,
+              completedAt: exec.completedAt,
+              errorMessage: exec.errorMessage
+            }))
+          }
+        : null,
       executions: tx.executions.map(exec => ({
         id: exec.id,
         status: exec.status,
