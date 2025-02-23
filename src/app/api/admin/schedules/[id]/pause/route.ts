@@ -10,7 +10,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
         where: { id },
         data: {
           status: BurnStatus.FAILED,
-          errorMessage: 'Cancelled by admin'
+          error: 'Cancelled by admin'
         }
       })
     )
