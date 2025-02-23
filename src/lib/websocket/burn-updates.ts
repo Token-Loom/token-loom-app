@@ -9,14 +9,13 @@ interface BurnUpdateData {
   txSignature?: string | null
   confirmedAt?: Date | null
   executedAt?: Date | null
-  retryCount?: number
-  nextRetryAt?: Date | null
-  errorMessage?: string | null
+  error?: string | null
   startedAt?: Date
   completedAt?: Date | null
   type?: string
   message?: string
   createdAt?: Date
+  scheduledFor?: Date
 }
 
 interface BurnUpdate {
@@ -83,9 +82,8 @@ export class BurnUpdateServer {
           id: schedule.id,
           status: schedule.status,
           executedAt: schedule.executedAt,
-          retryCount: schedule.retryCount,
-          nextRetryAt: schedule.nextRetryAt,
-          errorMessage: schedule.errorMessage
+          scheduledFor: schedule.scheduledFor,
+          error: schedule.error
         }
       }
       client.send(JSON.stringify(update))
@@ -104,7 +102,7 @@ export class BurnUpdateServer {
           txSignature: execution.txSignature,
           startedAt: execution.startedAt,
           completedAt: execution.completedAt,
-          errorMessage: execution.errorMessage
+          error: execution.errorMessage
         }
       }
       client.send(JSON.stringify(update))
