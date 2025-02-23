@@ -16,35 +16,27 @@ const RETRY_DELAY = 1000 // 1 second
 
 // Create a function to get a new Prisma client instance
 function getNewPrismaClient() {
-  // Configure database connection parameters
-  const url = new URL(process.env.DATABASE_URL as string)
-  url.searchParams.append('statement_cache_size', '0')
-  url.searchParams.append('pgbouncer', 'true')
-  url.searchParams.append('connection_limit', '1')
-
   return new PrismaClient({
     log: process.env.NODE_ENV === 'development' ? ['query', 'error', 'warn'] : ['error'],
     datasources: {
       db: {
-        url: url.toString()
+        url: process.env.DATABASE_URL
       }
     }
   })
 }
 
-// Export the default client for general use
-export const prisma = getNewPrismaClient()
+// Use global prisma instance in development to prevent too many connections
+const prisma = global.prisma || getNewPrismaClient()
+if (process.env.NODE_ENV === 'development') global.prisma = prisma
+
+export { prisma }
 
 export async function executeWithRetry<T>(operation: (client: PrismaClient) => Promise<T>, retryCount = 0): Promise<T> {
-  const client = getNewPrismaClient()
-
   try {
-    const result = await operation(client)
-    await client.$disconnect()
+    const result = await operation(prisma)
     return result
   } catch (error) {
-    await client.$disconnect()
-
     // Check if it's a connection or prepared statement error
     if (
       error instanceof Prisma.PrismaClientKnownRequestError ||
@@ -56,7 +48,7 @@ export async function executeWithRetry<T>(operation: (client: PrismaClient) => P
         // Wait before retrying
         await new Promise(resolve => setTimeout(resolve, RETRY_DELAY))
 
-        // Retry the operation with a new client
+        // Retry the operation
         return executeWithRetry(operation, retryCount + 1)
       }
     }

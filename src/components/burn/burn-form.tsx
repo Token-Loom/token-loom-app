@@ -185,7 +185,7 @@ export function BurnForm() {
         <CardHeader className='relative'>
           <CardTitle className='text-xl sm:text-2xl'>Connect Wallet</CardTitle>
           <CardDescription className='text-[#A3A3A3] text-sm sm:text-base'>
-            Please connect your wallet to start burning tokens
+            Connect your wallet to start using TokenLoom&apos;s secure token burning service
           </CardDescription>
         </CardHeader>
       </Card>
@@ -201,7 +201,7 @@ export function BurnForm() {
           Token Burn
         </CardTitle>
         <CardDescription className='text-[#E6E6E6]/60 text-sm sm:text-base'>
-          Select a token and amount to burn
+          Use TokenLoom to securely burn your Solana tokens
         </CardDescription>
       </CardHeader>
 

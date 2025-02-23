@@ -1,7 +1,7 @@
 {
-  "name": "ControlledBurn",
-  "short_name": "ControlledBurn",
-  "description": "Secure and intuitive token burning service for Solana-based tokens",
+  "name": "TokenLoom",
+  "short_name": "TokenLoom",
+  "description": "Secure Solana token burning service",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#13141F",
@@ -11,30 +11,46 @@
     {
       "src": "/icon-192x192.png",
       "sizes": "192x192",
-      "type": "image/png",
-      "purpose": "any maskable"
+      "type": "image/png"
     },
     {
       "src": "/icon-512x512.png",
       "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "any maskable"
+      "type": "image/png"
     }
   ],
-  "related_applications": [],
-  "prefer_related_applications": false,
-  "categories": [
-    "finance",
-    "utilities",
-    "productivity"
+  "shortcuts": [
+    {
+      "name": "Burn Tokens",
+      "short_name": "Burn",
+      "description": "Go to token burning interface",
+      "url": "/burn",
+      "icons": [
+        {
+          "src": "/burn-icon.png",
+          "sizes": "192x192"
+        }
+      ]
+    },
+    {
+      "name": "Dashboard",
+      "short_name": "Dashboard",
+      "description": "View your burn history and statistics",
+      "url": "/dashboard",
+      "icons": [
+        {
+          "src": "/dashboard-icon.png",
+          "sizes": "192x192"
+        }
+      ]
+    }
   ],
   "screenshots": [
     {
       "src": "/screenshot-1.png",
       "sizes": "1280x720",
       "type": "image/png",
-      "platform": "wide",
-      "label": "ControlledBurn Dashboard"
+      "label": "TokenLoom Dashboard"
     }
   ]
 }

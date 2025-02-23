@@ -19,6 +19,7 @@ export function Navigation() {
   const navLinks = [
     { href: '/', label: 'Home' },
     { href: '/burn', label: 'Burn Dashboard' },
+    { href: '/roadmap', label: 'Roadmap' },
     ...(isAdmin ? [{ href: '/admin', label: 'Admin' }] : [])
   ]
 
@@ -31,7 +32,7 @@ export function Navigation() {
           </Link>
 
           {/* Desktop Navigation */}
-          <div className='hidden md:flex items-center gap-6'>
+          <div className='hidden md:flex items-center gap-8 ml-2'>
             {navLinks.map(link => (
               <Link
                 key={link.href}

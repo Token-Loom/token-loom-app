@@ -12,7 +12,7 @@ const features = [
     description:
       'Our entire codebase is publicly available on GitHub, allowing anyone to inspect, verify, and contribute to the project.',
     icon: GithubIcon,
-    link: 'https://github.com/yourusername/controlledburn',
+    link: 'https://github.com/Token-Loom/token-loom-app',
     color: '#9945FF'
   },
   {

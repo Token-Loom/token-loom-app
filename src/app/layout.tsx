@@ -30,17 +30,18 @@ export const viewport: Viewport = {
 }
 
 export const metadata: Metadata = {
-  metadataBase: new URL('https://controlledburn.io'),
+  metadataBase: new URL('https://tokenloom.io'),
   title: {
-    default: 'ControlledBurn - Secure Solana Token Burning Service',
-    template: '%s | ControlledBurn'
+    default: 'TokenLoom - Secure Solana Token Burning Service',
+    template: '%s | TokenLoom'
   },
   description:
-    'ControlledBurn is a secure and intuitive token burning service for Solana-based tokens. Schedule controlled burns, monitor transactions, and manage your token supply efficiently.',
+    'TokenLoom is a secure and intuitive token burning service for Solana-based tokens. Schedule controlled burns, monitor transactions, and manage your token supply efficiently.',
   keywords: ['Solana', 'token burning', 'cryptocurrency', 'blockchain', 'DeFi', 'token management', 'controlled burn'],
-  authors: [{ name: 'ControlledBurn Team' }],
-  creator: 'ControlledBurn Team',
-  publisher: 'ControlledBurn',
+  applicationName: 'TokenLoom',
+  authors: [{ name: 'TokenLoom Team' }],
+  creator: 'TokenLoom Team',
+  publisher: 'TokenLoom',
   robots: {
     index: true,
     follow: true,
@@ -55,34 +56,38 @@ export const metadata: Metadata = {
   openGraph: {
     type: 'website',
     locale: 'en_US',
-    url: 'https://controlledburn.io',
-    siteName: 'ControlledBurn',
-    title: 'ControlledBurn - Secure Solana Token Burning Service',
+    url: 'https://tokenloom.io',
+    siteName: 'TokenLoom',
+    title: 'TokenLoom - Secure Solana Token Burning Service',
     description:
-      'ControlledBurn is a secure and intuitive token burning service for Solana-based tokens. Schedule controlled burns, monitor transactions, and manage your token supply efficiently.',
+      'TokenLoom is a secure and intuitive token burning service for Solana-based tokens. Schedule controlled burns, monitor transactions, and manage your token supply efficiently.',
     images: [
       {
-        url: '/og-image.png',
+        url: '/og.png',
         width: 1200,
         height: 630,
-        alt: 'ControlledBurn - Secure Solana Token Burning Service'
+        alt: 'TokenLoom - Secure Solana Token Burning Service'
       }
     ]
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'ControlledBurn - Secure Solana Token Burning Service',
+    title: 'TokenLoom - Secure Solana Token Burning Service',
     description:
-      'ControlledBurn is a secure and intuitive token burning service for Solana-based tokens. Schedule controlled burns, monitor transactions, and manage your token supply efficiently.',
-    images: ['/og-image.png'],
-    creator: '@controlledburn',
-    site: '@controlledburn'
+      'TokenLoom is a secure and intuitive token burning service for Solana-based tokens. Schedule controlled burns, monitor transactions, and manage your token supply efficiently.',
+    images: ['/og.png'],
+    creator: '@tokenloom',
+    site: '@tokenloom'
   },
   verification: {
     google: 'your-google-site-verification'
   },
+  manifest: '/site.webmanifest',
+  icons: {
+    icon: '/favicon.ico'
+  },
   alternates: {
-    canonical: 'https://controlledburn.io'
+    canonical: 'https://tokenloom.io'
   }
 }
 

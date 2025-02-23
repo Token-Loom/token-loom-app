@@ -11,9 +11,9 @@ import Script from 'next/script'
 export const metadata: Metadata = {
   title: 'Home',
   description:
-    'ControlledBurn - The most secure and efficient way to burn Solana tokens. Schedule controlled burns, monitor transactions, and manage your token supply with confidence.',
+    'TokenLoom - The most secure and efficient way to burn Solana tokens. Schedule controlled burns, monitor transactions, and manage your token supply with confidence.',
   openGraph: {
-    title: 'ControlledBurn - Secure Solana Token Burning',
+    title: 'TokenLoom - Secure Solana Token Burning',
     description:
       'The most secure and efficient way to burn Solana tokens. Schedule controlled burns, monitor transactions, and manage your token supply with confidence.'
   }
@@ -29,9 +29,9 @@ export default function Home() {
           __html: JSON.stringify({
             '@context': 'https://schema.org',
             '@type': 'WebApplication',
-            name: 'ControlledBurn',
+            name: 'TokenLoom',
             description: 'A secure and intuitive token burning service for Solana-based tokens',
-            url: 'https://controlledburn.io',
+            url: 'https://tokenloom.io',
             applicationCategory: 'DeFi',
             operatingSystem: 'Web-based',
             offers: {
@@ -41,8 +41,8 @@ export default function Home() {
             },
             author: {
               '@type': 'Organization',
-              name: 'ControlledBurn Team',
-              url: 'https://controlledburn.io'
+              name: 'TokenLoom Team',
+              url: 'https://tokenloom.io'
             }
           })
         }}

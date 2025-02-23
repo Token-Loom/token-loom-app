@@ -104,7 +104,7 @@ export const connectPhantomMobile = () => {
     dapp_encryption_public_key: localStorage.getItem('phantom_dapp_public_key') || '',
     cluster: process.env.NEXT_PUBLIC_SOLANA_NETWORK || 'mainnet-beta',
     app_identity: JSON.stringify({
-      name: 'ControlledBurn',
+      name: 'TokenLoom',
       icon: `${window.location.origin}/logo.svg`,
       url: window.location.origin
     })
@@ -205,4 +205,18 @@ export const handlePhantomResponse = (
     onDebug?.(`Error: ${error instanceof Error ? error.message : 'Unknown error'}`)
     return null
   }
+}
+
+export const getPhantomDeepLink = (uri: string): string => {
+  // Store the current URL before redirecting
+  if (typeof window !== 'undefined') {
+    localStorage.setItem('phantom_redirect_url', window.location.href)
+  }
+
+  // Construct the deep link URL
+  const encodedUri = encodeURIComponent(uri)
+  const appUrl = 'https://tokenloom.io'
+  const deepLink = `https://phantom.app/ul/v1/connect?app_url=${appUrl}&dapp_encryption_public_key=${encodedUri}`
+
+  return deepLink
 }

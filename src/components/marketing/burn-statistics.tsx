@@ -59,17 +59,36 @@ export function BurnStatistics() {
     const fetchStats = async () => {
       try {
         setError(null)
+        console.log('Fetching burn statistics...')
+
         const response = await fetch('/api/statistics')
+        console.log('Response status:', response.status)
+
         const result = await response.json()
+        console.log('API response:', result)
+
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`)
+        }
+
+        if (!result || typeof result !== 'object') {
+          throw new Error('Invalid response format')
+        }
 
         if (!result.success) {
           throw new Error(result.error || 'Failed to fetch statistics')
         }
 
+        if (!result.data) {
+          throw new Error('No data received from API')
+        }
+
         setStats(result.data)
+        console.log('Statistics updated successfully:', result.data)
       } catch (error) {
         console.error('Error fetching burn statistics:', error)
-        setError('Failed to load statistics. Please try again later.')
+        setError(error instanceof Error ? error.message : 'Failed to load statistics. Please try again later.')
+        setStats(null)
       } finally {
         setLoading(false)
       }

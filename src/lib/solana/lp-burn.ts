@@ -3,6 +3,8 @@ import { createBurnInstruction } from '@solana/spl-token'
 import { createFeeInstruction } from './fees'
 import { isAdminWallet } from './admin-config'
 import { isLPToken } from './tokens'
+import { WalletContextState } from '@solana/wallet-adapter-react'
+import { getAssociatedTokenAddress } from '@solana/spl-token'
 
 export interface BurnLPTokenParams {
   connection: Connection
@@ -12,6 +14,14 @@ export interface BurnLPTokenParams {
   signTransaction: (transaction: Transaction) => Promise<Transaction>
   isControlledBurn?: boolean
   onProgress?: (status: string | null) => void
+}
+
+interface TokenAccountInfo {
+  info: {
+    tokenAmount: {
+      decimals: number
+    }
+  }
 }
 
 /**
@@ -70,13 +80,13 @@ export async function burnLPTokens({
       throw new Error('Token account not found')
     }
 
-    const parsedData = (tokenAccountInfo.value.data as ParsedAccountData).parsed
+    const parsedData = (tokenAccountInfo.value.data as ParsedAccountData).parsed as TokenAccountInfo
     if (!parsedData || typeof parsedData !== 'object') {
       throw new Error('Invalid token account data format')
     }
 
-    // Ensure we correctly access the decimals from the parsed data
-    const decimals = (parsedData as any).info.tokenAmount.decimals
+    // Access decimals from the properly typed data
+    const decimals = parsedData.info.tokenAmount.decimals
     if (typeof decimals !== 'number') {
       throw new Error('Could not determine token decimals')
     }
@@ -166,6 +176,43 @@ export async function burnLPTokens({
     if (error) {
       console.error('Error burning LP tokens:', error)
     }
+    throw error
+  }
+}
+
+export const burnLPToken = async (
+  connection: Connection,
+  wallet: WalletContextState,
+  lpTokenMint: PublicKey,
+  amount: number
+): Promise<string> => {
+  try {
+    // Get the LP token account
+    const lpTokenAccount = await getAssociatedTokenAddress(lpTokenMint, wallet.publicKey!)
+
+    // Create the burn instruction
+    const burnInstruction = createBurnInstruction(lpTokenAccount, lpTokenMint, wallet.publicKey!, amount, [])
+
+    // Create the transaction
+    const transaction = new Transaction().add(burnInstruction)
+
+    // Get the latest blockhash
+    const { blockhash } = await connection.getLatestBlockhash()
+    transaction.recentBlockhash = blockhash
+    transaction.feePayer = wallet.publicKey!
+
+    // Sign and send the transaction
+    const signature = await wallet.sendTransaction(transaction, connection)
+
+    // Confirm the transaction
+    const confirmation = await connection.confirmTransaction(signature)
+    if (confirmation.value.err) {
+      throw new Error('Transaction failed')
+    }
+
+    return signature
+  } catch (error: unknown) {
+    console.error('Error burning LP token:', error)
     throw error
   }
 }
