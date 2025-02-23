@@ -135,19 +135,19 @@ export function ManualControls() {
   }
 
   return (
-    <div className='grid gap-4 md:grid-cols-2'>
+    <div className='grid gap-6'>
       <Card className='bg-black/20 border-[#2E2E34]'>
-        <CardHeader>
-          <CardTitle className='text-lg text-[#E6E6E6]'>System Control</CardTitle>
-          <CardDescription className='text-[#E6E6E6]/60'>Control the burn execution system</CardDescription>
+        <CardHeader className='p-4 sm:p-6'>
+          <CardTitle className='text-base sm:text-lg text-[#E6E6E6] mb-1'>System Control</CardTitle>
+          <CardDescription className='text-sm text-[#E6E6E6]/60'>Control the burn execution system</CardDescription>
         </CardHeader>
-        <CardContent className='space-y-4'>
-          <div className='flex items-center gap-4'>
+        <CardContent className='p-4 sm:p-6 pt-0 space-y-4'>
+          <div className='flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:gap-4'>
             <Button
               variant={status.isRunning ? 'destructive' : 'default'}
               onClick={handleToggleSystem}
               disabled={isLoading}
-              className='bg-[#9945FF] hover:bg-[#9945FF]/90 text-[#E6E6E6]'
+              className='bg-[#9945FF] hover:bg-[#9945FF]/90 text-[#E6E6E6] w-full sm:w-auto'
             >
               {isLoading ? (
                 <Loader2 className='mr-2 h-4 w-4 animate-spin' />
@@ -163,13 +163,13 @@ export function ManualControls() {
               variant='outline'
               onClick={handleSyncNow}
               disabled={isLoading || !status.isRunning}
-              className='border-[#2E2E34] text-[#E6E6E6] hover:bg-[#2E2E34]'
+              className='border-[#2E2E34] text-[#E6E6E6] hover:bg-[#2E2E34] w-full sm:w-auto'
             >
               <RefreshCw className='mr-2 h-4 w-4' />
               Sync Now
             </Button>
 
-            {isStatusLoading && <Loader2 className='h-4 w-4 animate-spin text-[#9945FF]' />}
+            {isStatusLoading && <Loader2 className='h-4 w-4 animate-spin text-[#9945FF] hidden sm:block' />}
           </div>
 
           {status.lastSyncTime && (
@@ -179,19 +179,19 @@ export function ManualControls() {
       </Card>
 
       <Card className='bg-black/20 border-[#2E2E34]'>
-        <CardHeader>
-          <CardTitle className='text-lg text-[#E6E6E6]'>System Configuration</CardTitle>
-          <CardDescription className='text-[#E6E6E6]/60'>Configure system parameters</CardDescription>
+        <CardHeader className='p-4 sm:p-6'>
+          <CardTitle className='text-base sm:text-lg text-[#E6E6E6] mb-1'>System Configuration</CardTitle>
+          <CardDescription className='text-sm text-[#E6E6E6]/60'>Configure system parameters</CardDescription>
         </CardHeader>
-        <CardContent className='space-y-4'>
+        <CardContent className='p-4 sm:p-6 pt-0 space-y-4'>
           {isConfigLoading ? (
             <div className='flex items-center justify-center'>
-              <Skeleton className='h-16 w-full' />
+              <Skeleton className='h-16 w-full bg-[#1E1E24]' />
             </div>
           ) : (
             <>
               <div className='space-y-2'>
-                <Label htmlFor='maxRetries' className='text-[#E6E6E6]'>
+                <Label htmlFor='maxRetries' className='text-[#E6E6E6] text-sm'>
                   Maximum Retries
                 </Label>
                 <Input
@@ -201,12 +201,12 @@ export function ManualControls() {
                   onChange={e => setMaxRetries(e.target.value)}
                   min='0'
                   max='10'
-                  className='bg-black/20 border-[#2E2E34] text-[#E6E6E6]'
+                  className='bg-black/20 border-[#2E2E34] text-[#E6E6E6] h-10'
                 />
               </div>
 
               <div className='space-y-2'>
-                <Label htmlFor='retryDelay' className='text-[#E6E6E6]'>
+                <Label htmlFor='retryDelay' className='text-[#E6E6E6] text-sm'>
                   Retry Delay (seconds)
                 </Label>
                 <Input
@@ -216,14 +216,14 @@ export function ManualControls() {
                   onChange={e => setRetryDelay(e.target.value)}
                   min='60'
                   max='3600'
-                  className='bg-black/20 border-[#2E2E34] text-[#E6E6E6]'
+                  className='bg-black/20 border-[#2E2E34] text-[#E6E6E6] h-10'
                 />
               </div>
 
               <Button
                 onClick={handleUpdateConfig}
                 disabled={isLoading}
-                className='w-full bg-[#9945FF] hover:bg-[#9945FF]/90 text-[#E6E6E6]'
+                className='w-full bg-[#9945FF] hover:bg-[#9945FF]/90 text-[#E6E6E6] h-10'
               >
                 {isLoading ? (
                   <>

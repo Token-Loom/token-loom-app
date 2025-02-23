@@ -67,7 +67,11 @@ export function StatusDashboard() {
   const [error, setError] = useState<string | null>(null)
 
   const fetchTransactions = useCallback(async () => {
-    if (!publicKey) return
+    if (!publicKey) {
+      setTransactions([])
+      setIsLoading(false)
+      return
+    }
 
     try {
       setError(null)
@@ -79,10 +83,11 @@ export function StatusDashboard() {
         throw new Error(result.error || 'Failed to fetch transactions')
       }
 
-      setTransactions(result.data.transactions)
+      setTransactions(result.data.transactions || [])
       setPagination(result.data.pagination)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to fetch transactions')
+      setTransactions([])
     } finally {
       setIsLoading(false)
     }
@@ -146,16 +151,18 @@ export function StatusDashboard() {
   return (
     <Card className='overflow-hidden border-[#1E1E24] bg-black/20 backdrop-blur'>
       <div className='absolute inset-0 bg-gradient-to-r from-[#9945FF]/5 to-[#14F195]/5 opacity-50' />
-      <CardHeader className='relative'>
-        <div className='flex items-center justify-between'>
-          <div>
-            <CardTitle className='text-2xl'>Burn Status</CardTitle>
-            <CardDescription className='text-[#A3A3A3]'>View and monitor your burn transactions</CardDescription>
+      <CardHeader className='relative p-4 sm:p-6'>
+        <div className='flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4'>
+          <div className='space-y-1'>
+            <CardTitle className='text-xl sm:text-2xl'>Burn Status</CardTitle>
+            <CardDescription className='text-[#A3A3A3] text-sm sm:text-base'>
+              View and monitor your burn transactions
+            </CardDescription>
           </div>
           <Badge
             variant='outline'
             className={cn(
-              'px-4 py-2',
+              'px-3 sm:px-4 py-1.5 sm:py-2 text-sm whitespace-nowrap',
               isLoading ? 'bg-yellow-500/10 text-yellow-500' : 'bg-green-500/10 text-green-500'
             )}
           >
@@ -163,99 +170,110 @@ export function StatusDashboard() {
           </Badge>
         </div>
       </CardHeader>
-      <CardContent className='relative'>
+      <CardContent className='relative p-4 sm:p-6'>
         {error && (
-          <Alert variant='destructive' className='mb-4'>
-            <AlertCircle className='h-4 w-4' />
-            <AlertTitle>Error</AlertTitle>
-            <AlertDescription>{error}</AlertDescription>
+          <Alert variant='destructive' className='mb-6'>
+            <AlertCircle className='h-4 w-4 flex-shrink-0' />
+            <div className='flex-1 space-y-1'>
+              <AlertTitle className='text-base'>Error</AlertTitle>
+              <AlertDescription className='break-words text-sm'>{error}</AlertDescription>
+            </div>
           </Alert>
         )}
 
-        {isLoading && transactions.length === 0 ? (
-          <Skeleton className='h-16 w-full bg-[#1E1E24]' />
-        ) : transactions.length === 0 ? (
-          <div className='text-center py-8 text-[#A3A3A3]'>No burn transactions found</div>
+        {isLoading && !transactions?.length ? (
+          <Skeleton className='h-20 w-full bg-[#1E1E24]' />
+        ) : !transactions?.length ? (
+          <div className='text-center py-10 text-[#A3A3A3] text-sm sm:text-base'>No burn transactions found</div>
         ) : (
-          <ScrollArea className='h-[600px] pr-4'>
-            <div className='space-y-4'>
-              {transactions.map(tx => (
+          <ScrollArea className='h-[450px] sm:h-[600px] pr-2 sm:pr-4 -mx-4 sm:mx-0'>
+            <div className='space-y-4 px-4 sm:px-0'>
+              {transactions?.map(tx => (
                 <Card key={tx.id} className='border-[#1E1E24] bg-black/20'>
-                  <CardHeader>
-                    <div className='flex items-start justify-between'>
-                      <div>
-                        <CardTitle className='text-lg'>
+                  <CardHeader className='p-4 sm:p-6'>
+                    <div className='flex flex-col sm:flex-row items-start justify-between gap-3 sm:gap-4'>
+                      <div className='space-y-1.5'>
+                        <CardTitle className='text-base sm:text-lg break-all'>
                           {tx.amount} {tx.tokenSymbol}
                         </CardTitle>
-                        <CardDescription>Created {format(new Date(tx.createdAt), 'PPp')}</CardDescription>
+                        <CardDescription className='text-sm'>
+                          Created {format(new Date(tx.createdAt), 'PPp')}
+                        </CardDescription>
                       </div>
-                      {getStatusBadge(tx.status)}
+                      <div className='self-start sm:self-center'>{getStatusBadge(tx.status)}</div>
                     </div>
                   </CardHeader>
-                  <CardContent>
-                    <Tabs defaultValue='details'>
-                      <TabsList className='bg-[#1E1E24]'>
-                        <TabsTrigger value='details'>Details</TabsTrigger>
-                        <TabsTrigger value='schedule'>Schedule</TabsTrigger>
+                  <CardContent className='p-4 sm:p-6 pt-0 sm:pt-0'>
+                    <Tabs defaultValue='details' className='w-full'>
+                      <TabsList className='bg-[#1E1E24] w-full sm:w-auto mb-4'>
+                        <TabsTrigger value='details' className='flex-1 sm:flex-none text-sm py-2'>
+                          Details
+                        </TabsTrigger>
+                        <TabsTrigger value='schedule' className='flex-1 sm:flex-none text-sm py-2'>
+                          Schedule
+                        </TabsTrigger>
                       </TabsList>
                       <TabsContent value='details'>
-                        <div className='space-y-2'>
-                          <div className='flex justify-between'>
-                            <span className='text-[#A3A3A3]'>Status</span>
+                        <div className='space-y-3'>
+                          <div className='flex flex-col sm:flex-row justify-between gap-2 sm:gap-4'>
+                            <span className='text-[#A3A3A3] text-sm'>Status</span>
                             <span>{getStatusBadge(tx.status)}</span>
                           </div>
                           {tx.txSignature && (
-                            <div className='flex justify-between'>
-                              <span className='text-[#A3A3A3]'>Transaction</span>
+                            <div className='flex flex-col sm:flex-row justify-between gap-2 sm:gap-4'>
+                              <span className='text-[#A3A3A3] text-sm'>Transaction</span>
                               <a
                                 href={`https://solscan.io/tx/${tx.txSignature}`}
                                 target='_blank'
                                 rel='noopener noreferrer'
-                                className='text-[#9945FF] hover:underline'
+                                className='text-[#9945FF] hover:underline text-sm break-all'
                               >
                                 View on Solscan
                               </a>
                             </div>
                           )}
                           {tx.confirmedAt && (
-                            <div className='flex justify-between'>
-                              <span className='text-[#A3A3A3]'>Confirmed</span>
-                              <span>{format(new Date(tx.confirmedAt), 'PPp')}</span>
+                            <div className='flex flex-col sm:flex-row justify-between gap-2 sm:gap-4'>
+                              <span className='text-[#A3A3A3] text-sm'>Confirmed</span>
+                              <span className='text-sm'>{format(new Date(tx.confirmedAt), 'PPp')}</span>
                             </div>
                           )}
                         </div>
                       </TabsContent>
                       <TabsContent value='schedule'>
-                        {tx.scheduledBurns.length === 0 ? (
-                          <div className='text-center py-4 text-[#A3A3A3]'>No scheduled burns</div>
+                        {!tx.scheduledBurns?.length ? (
+                          <div className='text-center py-6 text-[#A3A3A3] text-sm'>No scheduled burns</div>
                         ) : (
-                          <div className='space-y-4'>
-                            {tx.scheduledBurns.map(burn => (
-                              <div key={burn.id} className='space-y-2'>
-                                <div className='flex justify-between'>
-                                  <span className='text-[#A3A3A3]'>Amount</span>
-                                  <span>
+                          <div className='space-y-6'>
+                            {tx.scheduledBurns?.map(burn => (
+                              <div
+                                key={burn.id}
+                                className='space-y-3 pb-4 border-b border-[#2E2E34] last:border-0 last:pb-0'
+                              >
+                                <div className='flex flex-col sm:flex-row justify-between gap-2 sm:gap-4'>
+                                  <span className='text-[#A3A3A3] text-sm'>Amount</span>
+                                  <span className='text-sm break-all'>
                                     {burn.amount} {tx.tokenSymbol}
                                   </span>
                                 </div>
-                                <div className='flex justify-between'>
-                                  <span className='text-[#A3A3A3]'>Scheduled For</span>
-                                  <span>{format(new Date(burn.scheduledFor), 'PPp')}</span>
+                                <div className='flex flex-col sm:flex-row justify-between gap-2 sm:gap-4'>
+                                  <span className='text-[#A3A3A3] text-sm'>Scheduled For</span>
+                                  <span className='text-sm'>{format(new Date(burn.scheduledFor), 'PPp')}</span>
                                 </div>
-                                <div className='flex justify-between'>
-                                  <span className='text-[#A3A3A3]'>Status</span>
+                                <div className='flex flex-col sm:flex-row justify-between gap-2 sm:gap-4'>
+                                  <span className='text-[#A3A3A3] text-sm'>Status</span>
                                   <span>{getStatusBadge(burn.status)}</span>
                                 </div>
                                 {burn.executedAt && (
-                                  <div className='flex justify-between'>
-                                    <span className='text-[#A3A3A3]'>Executed</span>
-                                    <span>{format(new Date(burn.executedAt), 'PPp')}</span>
+                                  <div className='flex flex-col sm:flex-row justify-between gap-2 sm:gap-4'>
+                                    <span className='text-[#A3A3A3] text-sm'>Executed</span>
+                                    <span className='text-sm'>{format(new Date(burn.executedAt), 'PPp')}</span>
                                   </div>
                                 )}
                                 {burn.errorMessage && (
-                                  <div className='flex justify-between'>
-                                    <span className='text-[#A3A3A3]'>Error</span>
-                                    <span className='text-red-500'>{burn.errorMessage}</span>
+                                  <div className='flex flex-col sm:flex-row justify-between gap-2 sm:gap-4'>
+                                    <span className='text-[#A3A3A3] text-sm'>Error</span>
+                                    <span className='text-red-500 text-sm break-words'>{burn.errorMessage}</span>
                                   </div>
                                 )}
                               </div>

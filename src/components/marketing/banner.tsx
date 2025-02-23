@@ -12,7 +12,7 @@ export function Banner() {
   })
 
   return (
-    <section className='relative min-h-[90vh] overflow-hidden py-12 sm:py-24 bg-[#13141F]'>
+    <section className='relative min-h-[90vh] overflow-hidden pb-12 pt-8 sm:py-24 bg-[#13141F]'>
       <div className='container relative z-10 flex min-h-[calc(90vh-96px)] sm:min-h-[calc(90vh-160px)] flex-col items-center justify-center px-4 sm:px-6'>
         <motion.div
           ref={ref}
@@ -60,7 +60,7 @@ export function Banner() {
             initial={{ opacity: 0, y: 20 }}
             animate={inView ? { opacity: 1, y: 0 } : {}}
             transition={{ delay: 0.8, duration: 0.8 }}
-            className='flex flex-col items-center gap-4 sm:flex-row sm:justify-center w-full px-4 sm:px-0'
+            className='flex flex-col items-center gap-4 mt-10 sm:flex-row sm:justify-center w-full px-4 sm:px-0'
           >
             <Link href='/burn' className='w-full sm:w-auto'>
               <Button

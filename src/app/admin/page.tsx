@@ -10,6 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { useRouter } from 'next/navigation'
 import { useEffect } from 'react'
 import { isAdminWallet, getAdminWalletName } from '@/lib/solana/admin-config'
+import { BarChart3, Calendar, Settings, DollarSign } from 'lucide-react'
 
 export default function AdminPage() {
   const { publicKey } = useWallet()
@@ -68,50 +69,58 @@ export default function AdminPage() {
             </div>
           </div>
 
-          <div className='bg-[#1A1B23]/50 backdrop-blur-sm border border-[#2E2E34] rounded-2xl p-6 sm:p-8'>
-            <Tabs value={activeTab} onValueChange={setActiveTab} className='space-y-6 sm:space-y-8'>
-              <TabsList className='bg-[#1E1E24] border border-[#2E2E34] rounded-xl w-full flex justify-between sm:justify-start sm:w-auto sm:inline-flex p-1'>
-                <TabsTrigger
-                  value='monitoring'
-                  className='flex-1 sm:flex-none data-[state=active]:bg-[#2E2E34] data-[state=active]:text-white text-[#E6E6E6]/80 rounded-lg px-6 py-2.5 text-sm sm:text-base transition-all'
-                >
-                  Monitoring
-                </TabsTrigger>
-                <TabsTrigger
-                  value='schedule'
-                  className='flex-1 sm:flex-none data-[state=active]:bg-[#2E2E34] data-[state=active]:text-white text-[#E6E6E6]/80 rounded-lg px-6 py-2.5 text-sm sm:text-base transition-all'
-                >
-                  Burn Schedule
-                </TabsTrigger>
-                <TabsTrigger
-                  value='controls'
-                  className='flex-1 sm:flex-none data-[state=active]:bg-[#2E2E34] data-[state=active]:text-white text-[#E6E6E6]/80 rounded-lg px-6 py-2.5 text-sm sm:text-base transition-all'
-                >
-                  Manual Controls
-                </TabsTrigger>
-                <TabsTrigger
-                  value='profit'
-                  className='flex-1 sm:flex-none data-[state=active]:bg-[#2E2E34] data-[state=active]:text-white text-[#E6E6E6]/80 rounded-lg px-6 py-2.5 text-sm sm:text-base transition-all'
-                >
-                  Profit
-                </TabsTrigger>
-              </TabsList>
+          <div className='bg-[#1A1B23]/50 backdrop-blur-sm border border-[#2E2E34] rounded-2xl p-4 sm:p-6'>
+            <Tabs value={activeTab} onValueChange={setActiveTab} className='flex flex-col gap-6'>
+              <div className='bg-[#1E1E24] border border-[#2E2E34] rounded-xl'>
+                <TabsList className='w-full h-fit grid grid-cols-2 sm:grid-cols-4 p-1'>
+                  <TabsTrigger
+                    value='monitoring'
+                    className='bg-transparent hover:bg-[#2E2E34]/50 data-[state=active]:bg-[#2E2E34] data-[state=active]:text-white text-[#E6E6E6]/80 rounded-lg px-3 py-2.5 text-sm font-medium transition-all flex items-center justify-center gap-2 m-0.5 h-10'
+                  >
+                    <BarChart3 className='w-4 h-4 shrink-0' />
+                    <span>Monitoring</span>
+                  </TabsTrigger>
+                  <TabsTrigger
+                    value='schedule'
+                    className='bg-transparent hover:bg-[#2E2E34]/50 data-[state=active]:bg-[#2E2E34] data-[state=active]:text-white text-[#E6E6E6]/80 rounded-lg px-3 py-2.5 text-sm font-medium transition-all flex items-center justify-center gap-2 m-0.5 h-10'
+                  >
+                    <Calendar className='w-4 h-4 shrink-0' />
+                    <span>Schedule</span>
+                  </TabsTrigger>
+                  <TabsTrigger
+                    value='controls'
+                    className='bg-transparent hover:bg-[#2E2E34]/50 data-[state=active]:bg-[#2E2E34] data-[state=active]:text-white text-[#E6E6E6]/80 rounded-lg px-3 py-2.5 text-sm font-medium transition-all flex items-center justify-center gap-2 m-0.5 h-10'
+                  >
+                    <Settings className='w-4 h-4 shrink-0' />
+                    <span>Controls</span>
+                  </TabsTrigger>
+                  <TabsTrigger
+                    value='profit'
+                    className='bg-transparent hover:bg-[#2E2E34]/50 data-[state=active]:bg-[#2E2E34] data-[state=active]:text-white text-[#E6E6E6]/80 rounded-lg px-3 py-2.5 text-sm font-medium transition-all flex items-center justify-center gap-2 m-0.5 h-10'
+                  >
+                    <DollarSign className='w-4 h-4 shrink-0' />
+                    <span>Profit</span>
+                  </TabsTrigger>
+                </TabsList>
+              </div>
 
-              <TabsContent value='monitoring' className='space-y-6 min-h-[500px]'>
-                <MonitoringDashboard />
-              </TabsContent>
+              <div className='space-y-4'>
+                <TabsContent value='monitoring' className='mt-0'>
+                  <MonitoringDashboard />
+                </TabsContent>
 
-              <TabsContent value='schedule' className='space-y-6 min-h-[500px]'>
-                <BurnScheduleManager />
-              </TabsContent>
+                <TabsContent value='schedule' className='mt-0'>
+                  <BurnScheduleManager />
+                </TabsContent>
 
-              <TabsContent value='controls' className='space-y-6 min-h-[500px]'>
-                <ManualControls />
-              </TabsContent>
+                <TabsContent value='controls' className='mt-0'>
+                  <ManualControls />
+                </TabsContent>
 
-              <TabsContent value='profit' className='space-y-6 min-h-[500px]'>
-                <ProfitDashboard />
-              </TabsContent>
+                <TabsContent value='profit' className='mt-0'>
+                  <ProfitDashboard />
+                </TabsContent>
+              </div>
             </Tabs>
           </div>
         </div>

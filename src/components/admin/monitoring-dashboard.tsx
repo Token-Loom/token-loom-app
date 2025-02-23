@@ -102,86 +102,96 @@ export function MonitoringDashboard() {
   }
 
   return (
-    <div className='space-y-8'>
-      <div className='grid gap-4 md:grid-cols-2 lg:grid-cols-4'>
+    <div className='space-y-6 sm:space-y-8'>
+      <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-4'>
         <Card className='bg-black/20 border-[#2E2E34]'>
-          <CardHeader className='pb-2'>
-            <CardTitle className='text-lg text-[#E6E6E6]'>System Status</CardTitle>
-            <CardDescription className='text-[#E6E6E6]/60'>Current system state</CardDescription>
+          <CardHeader className='pb-2 p-4 sm:p-6'>
+            <CardTitle className='text-base sm:text-lg text-[#E6E6E6] mb-1'>System Status</CardTitle>
+            <CardDescription className='text-sm text-[#E6E6E6]/60'>Current system state</CardDescription>
           </CardHeader>
-          <CardContent>
+          <CardContent className='p-4 sm:p-6 pt-0'>
             {loading ? (
-              <div className='flex items-center gap-2 mt-2'>
-                <Skeleton className='h-8 w-24 bg-[#1E1E24]' />
+              <div className='flex items-center gap-2 mt-3'>
+                <Skeleton className='h-6 sm:h-8 w-20 sm:w-24 bg-[#1E1E24]' />
               </div>
             ) : (
-              <div className='flex items-center gap-2'>
+              <div className='flex items-center gap-3 mt-3'>
                 <div className={`h-3 w-3 rounded-full ${systemStatus.isRunning ? 'bg-[#14F195]' : 'bg-[#FF8F00]'}`} />
-                <div className='text-2xl font-bold text-[#E6E6E6]'>{systemStatus.isRunning ? 'Running' : 'Paused'}</div>
+                <div className='text-lg sm:text-2xl font-bold text-[#E6E6E6]'>
+                  {systemStatus.isRunning ? 'Running' : 'Paused'}
+                </div>
               </div>
             )}
           </CardContent>
         </Card>
 
         <Card className='bg-black/20 border-[#2E2E34]'>
-          <CardHeader className='pb-2'>
-            <CardTitle className='text-lg text-[#E6E6E6]'>Active Workers</CardTitle>
-            <CardDescription className='text-[#E6E6E6]/60'>Currently running burn workers</CardDescription>
+          <CardHeader className='pb-2 p-4 sm:p-6'>
+            <CardTitle className='text-base sm:text-lg text-[#E6E6E6] mb-1'>Active Workers</CardTitle>
+            <CardDescription className='text-sm text-[#E6E6E6]/60'>Currently running burn workers</CardDescription>
           </CardHeader>
-          <CardContent>
+          <CardContent className='p-4 sm:p-6 pt-0'>
             {loading ? (
-              <Skeleton className='h-8 w-16 bg-[#1E1E24] mt-2' />
+              <Skeleton className='h-6 sm:h-8 w-14 sm:w-16 bg-[#1E1E24] mt-3' />
             ) : (
-              <div className='text-2xl font-bold text-[#14F195]'>{systemStatus.activeWorkers}</div>
+              <div className='text-lg sm:text-2xl font-bold text-[#14F195] mt-3'>{systemStatus.activeWorkers}</div>
             )}
           </CardContent>
         </Card>
 
         <Card className='bg-black/20 border-[#2E2E34]'>
-          <CardHeader className='pb-2'>
-            <CardTitle className='text-lg text-[#E6E6E6]'>Pending Transactions</CardTitle>
-            <CardDescription className='text-[#E6E6E6]/60'>Transactions waiting to be processed</CardDescription>
+          <CardHeader className='pb-2 p-4 sm:p-6'>
+            <CardTitle className='text-base sm:text-lg text-[#E6E6E6] mb-1'>Pending Transactions</CardTitle>
+            <CardDescription className='text-sm text-[#E6E6E6]/60'>
+              Transactions waiting to be processed
+            </CardDescription>
           </CardHeader>
-          <CardContent>
+          <CardContent className='p-4 sm:p-6 pt-0'>
             {loading ? (
-              <Skeleton className='h-8 w-16 bg-[#1E1E24] mt-2' />
+              <Skeleton className='h-6 sm:h-8 w-14 sm:w-16 bg-[#1E1E24] mt-3' />
             ) : (
-              <div className='text-2xl font-bold text-[#00C2FF]'>{systemStatus.pendingTransactions}</div>
+              <div className='text-lg sm:text-2xl font-bold text-[#00C2FF] mt-3'>
+                {systemStatus.pendingTransactions}
+              </div>
             )}
           </CardContent>
         </Card>
 
         <Card className='bg-black/20 border-[#2E2E34]'>
-          <CardHeader className='pb-2'>
-            <CardTitle className='text-lg text-[#E6E6E6]'>Failed Transactions</CardTitle>
-            <CardDescription className='text-[#E6E6E6]/60'>Transactions that need attention</CardDescription>
+          <CardHeader className='pb-2 p-4 sm:p-6'>
+            <CardTitle className='text-base sm:text-lg text-[#E6E6E6] mb-1'>Failed Transactions</CardTitle>
+            <CardDescription className='text-sm text-[#E6E6E6]/60'>Transactions that need attention</CardDescription>
           </CardHeader>
-          <CardContent>
+          <CardContent className='p-4 sm:p-6 pt-0'>
             {loading ? (
-              <Skeleton className='h-8 w-16 bg-[#1E1E24] mt-2' />
+              <Skeleton className='h-6 sm:h-8 w-14 sm:w-16 bg-[#1E1E24] mt-3' />
             ) : (
-              <div className='text-2xl font-bold text-[#FF8F00]'>{systemStatus.failedTransactions}</div>
+              <div className='text-lg sm:text-2xl font-bold text-[#FF8F00] mt-3'>{systemStatus.failedTransactions}</div>
             )}
           </CardContent>
         </Card>
       </div>
 
       <Card className='bg-black/20 border-[#2E2E34]'>
-        <CardHeader>
-          <CardTitle className='text-lg text-[#E6E6E6]'>Recent Executions</CardTitle>
-          <CardDescription className='text-[#E6E6E6]/60'>Latest burn execution attempts</CardDescription>
+        <CardHeader className='p-4 sm:p-6'>
+          <CardTitle className='text-base sm:text-lg text-[#E6E6E6] mb-1'>Recent Executions</CardTitle>
+          <CardDescription className='text-sm text-[#E6E6E6]/60'>Latest burn execution attempts</CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className='p-0 sm:p-6 sm:pt-0 overflow-hidden'>
           {loading ? (
-            <div className='space-y-4'>
+            <div className='space-y-3 p-4 sm:p-0'>
               {Array.from({ length: 3 }).map((_, i) => (
-                <div key={i} className=''>
-                  <Skeleton className='h-6 w-full bg-[#1E1E24]' />
+                <div key={i}>
+                  <Skeleton className='h-5 sm:h-6 w-full bg-[#1E1E24]' />
                 </div>
               ))}
             </div>
           ) : (
-            <DataTable columns={executionColumns} data={executions} pageSize={10} />
+            <div className='overflow-x-auto'>
+              <div className='min-w-[600px] sm:w-full [&_th]:p-4 [&_td]:p-4 [&_th]:text-sm [&_td]:text-sm'>
+                <DataTable columns={executionColumns} data={executions} pageSize={10} />
+              </div>
+            </div>
           )}
         </CardContent>
       </Card>

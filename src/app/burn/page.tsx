@@ -22,7 +22,7 @@ export default function BurnPage() {
 
         {/* Content */}
         <div className='container relative px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto'>
-          <div className='flex flex-col gap-4 sm:gap-6 mb-8 sm:mb-12'>
+          <div className='flex flex-col gap-4 mx-2 sm:gap-6 mb-8 sm:mb-12'>
             <div className='inline-flex items-center space-x-2 text-sm text-[#E6E6E6]/60'>
               <svg className='w-4 h-4' fill='none' viewBox='0 0 24 24' stroke='currentColor'>
                 <path
@@ -46,24 +46,24 @@ export default function BurnPage() {
             </div>
           </div>
 
-          <div className='bg-[#1A1B23]/50 backdrop-blur-sm border border-[#2E2E34] rounded-2xl p-6 sm:p-8'>
+          <div className='bg-[#1A1B23]/50 backdrop-blur-sm border border-[#2E2E34] rounded-2xl p-2 sm:p-8'>
             <Tabs value={activeTab} onValueChange={setActiveTab} className='space-y-6 sm:space-y-8'>
               <TabsList className='bg-[#1E1E24] border border-[#2E2E34] rounded-xl w-full flex justify-between sm:justify-start sm:w-auto sm:inline-flex p-1'>
                 <TabsTrigger
                   value='burn'
-                  className='flex-1 sm:flex-none data-[state=active]:bg-[#2E2E34] data-[state=active]:text-white text-[#E6E6E6]/80 rounded-lg px-6 py-2.5 text-sm sm:text-base transition-all'
+                  className='flex-1 sm:flex-none data-[state=active]:bg-[#2E2E34] data-[state=active]:text-white text-[#E6E6E6]/80 rounded-lg px-2 sm:px-6 py-2.5 text-sm sm:text-base transition-all'
                 >
                   Burn Tokens
                 </TabsTrigger>
                 <TabsTrigger
                   value='status'
-                  className='flex-1 sm:flex-none data-[state=active]:bg-[#2E2E34] data-[state=active]:text-white text-[#E6E6E6]/80 rounded-lg px-6 py-2.5 text-sm sm:text-base transition-all'
+                  className='flex-1 sm:flex-none data-[state=active]:bg-[#2E2E34] data-[state=active]:text-white text-[#E6E6E6]/80 rounded-lg px-2 sm:px-6 py-2.5 text-sm sm:text-base transition-all'
                 >
                   Status
                 </TabsTrigger>
                 <TabsTrigger
                   value='history'
-                  className='flex-1 sm:flex-none data-[state=active]:bg-[#2E2E34] data-[state=active]:text-white text-[#E6E6E6]/80 rounded-lg px-6 py-2.5 text-sm sm:text-base transition-all'
+                  className='flex-1 sm:flex-none data-[state=active]:bg-[#2E2E34] data-[state=active]:text-white text-[#E6E6E6]/80 rounded-lg px-2 sm:px-6 py-2.5 text-sm sm:text-base transition-all'
                 >
                   History
                 </TabsTrigger>

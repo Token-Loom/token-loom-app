@@ -7,8 +7,6 @@ import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Button } from '@/components/ui/button'
 import { DatePickerWithRange } from '@/components/ui/date-range-picker'
-import { DataTable } from '@/components/ui/data-table'
-import { ColumnDef } from '@tanstack/react-table'
 import { formatDistanceToNow } from 'date-fns'
 import { Badge } from '@/components/ui/badge'
 import { ExternalLink, Download, Loader2, RefreshCw, Pause } from 'lucide-react'
@@ -39,62 +37,6 @@ interface PaginationInfo {
   limit: number
   totalPages: number
 }
-
-const columns: ColumnDef<Transaction>[] = [
-  {
-    accessorKey: 'createdAt',
-    header: 'Date',
-    cell: ({ row }) => formatDistanceToNow(new Date(row.original.createdAt), { addSuffix: true })
-  },
-  {
-    accessorKey: 'tokenSymbol',
-    header: 'Token',
-    cell: ({ row }) => (
-      <div className='flex flex-col'>
-        <span>{row.original.tokenSymbol}</span>
-        <span className='text-xs text-muted-foreground'>{truncateAddress(row.original.tokenMint)}</span>
-      </div>
-    )
-  },
-  {
-    accessorKey: 'amount',
-    header: 'Amount'
-  },
-  {
-    accessorKey: 'burnType',
-    header: 'Type',
-    cell: ({ row }) => (
-      <Badge variant={row.original.burnType === 'INSTANT' ? 'default' : 'secondary'}>
-        {row.original.burnType.toLowerCase()}
-      </Badge>
-    )
-  },
-  {
-    accessorKey: 'status',
-    header: 'Status',
-    cell: ({ row }) => {
-      const variant =
-        row.original.status === 'CONFIRMED'
-          ? 'default'
-          : row.original.status === 'PENDING'
-            ? 'secondary'
-            : 'destructive'
-      return <Badge variant={variant}>{row.original.status.toLowerCase()}</Badge>
-    }
-  },
-  {
-    id: 'actions',
-    cell: ({ row }) => (
-      <Button
-        variant='ghost'
-        size='icon'
-        onClick={() => window.open(`https://solscan.io/tx/${row.original.txSignature}`, '_blank')}
-      >
-        <ExternalLink className='h-4 w-4' />
-      </Button>
-    )
-  }
-]
 
 export function TransactionHistory() {
   const { publicKey } = useWallet()
@@ -191,48 +133,169 @@ export function TransactionHistory() {
 
   return (
     <Card className='w-full'>
-      <CardHeader>
-        <CardTitle>Transaction History</CardTitle>
-        <CardDescription>View and filter your burn transactions</CardDescription>
+      <CardHeader className='p-4 sm:p-6'>
+        <CardTitle className='text-xl sm:text-2xl'>Transaction History</CardTitle>
+        <CardDescription className='text-sm sm:text-base'>View and filter your burn transactions</CardDescription>
       </CardHeader>
-      <CardContent>
-        <div className='flex flex-col gap-4'>
-          <div className='flex flex-wrap gap-4'>
-            <>
-              <div className='flex-1 min-w-[200px]'>
-                <Input
-                  placeholder='Search by token name or address'
-                  value={tokenFilter}
-                  onChange={e => setTokenFilter(e.target.value)}
-                />
-              </div>
+      <CardContent className='p-4 sm:p-6'>
+        <div className='flex flex-col gap-4 sm:gap-6'>
+          <div className='grid grid-cols-1 sm:grid-cols-2 lg:flex lg:flex-wrap gap-3 sm:gap-4'>
+            <div className='w-full sm:col-span-2 lg:flex-1 min-w-[200px]'>
+              <Input
+                placeholder='Search by token name or address'
+                value={tokenFilter}
+                onChange={e => setTokenFilter(e.target.value)}
+                className='h-10'
+              />
+            </div>
+            <div className='w-full sm:col-span-2 lg:w-auto'>
               <DatePickerWithRange value={dateRange} onChange={setDateRange} />
-              <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger className='w-[180px]'>
-                  <SelectValue placeholder='Filter by status' />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value='ALL'>All</SelectItem>
-                  <SelectItem value='PENDING'>Pending</SelectItem>
-                  <SelectItem value='CONFIRMED'>Confirmed</SelectItem>
-                  <SelectItem value='FAILED'>Failed</SelectItem>
-                </SelectContent>
-              </Select>
-              <Button variant='outline' onClick={handleExport} disabled={!transactions.length || isLoading}>
+            </div>
+            <Select value={statusFilter} onValueChange={setStatusFilter}>
+              <SelectTrigger className='w-full lg:w-[180px] h-10'>
+                <SelectValue placeholder='Filter by status' />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value='ALL'>All</SelectItem>
+                <SelectItem value='PENDING'>Pending</SelectItem>
+                <SelectItem value='CONFIRMED'>Confirmed</SelectItem>
+                <SelectItem value='FAILED'>Failed</SelectItem>
+              </SelectContent>
+            </Select>
+            <div className='flex flex-wrap gap-3 sm:gap-4'>
+              <Button
+                variant='outline'
+                onClick={handleExport}
+                disabled={!transactions.length || isLoading}
+                className='w-full sm:w-auto h-10'
+              >
                 {isLoading ? <Loader2 className='mr-2 h-4 w-4 animate-spin' /> : <Download className='mr-2 h-4 w-4' />}
                 Export
               </Button>
-              <Button variant='outline' onClick={() => setIsPolling(!isPolling)}>
+              <Button variant='outline' onClick={() => setIsPolling(!isPolling)} className='w-full sm:w-auto h-10'>
                 {isPolling ? <Pause className='mr-2 h-4 w-4' /> : <RefreshCw className='mr-2 h-4 w-4' />}
                 {isPolling ? 'Stop Auto-Refresh' : 'Start Auto-Refresh'}
               </Button>
-            </>
+            </div>
           </div>
 
           {isLoading ? (
-            <Skeleton className='h-16 w-full bg-[#1E1E24]' />
+            <Skeleton className='h-20 w-full bg-[#1E1E24]' />
           ) : (
-            <DataTable columns={columns} data={transactions} pageSize={pagination.limit} />
+            <>
+              {/* Desktop view */}
+              <div className='hidden sm:block rounded-md border border-[#2E2E34] overflow-hidden'>
+                <div className='overflow-x-auto'>
+                  <div className='min-w-[700px]'>
+                    <table className='w-full'>
+                      <thead>
+                        <tr className='border-b border-[#2E2E34] bg-[#1E1E24]'>
+                          <th className='text-left p-3 text-sm font-medium text-[#E6E6E6]/60'>Date</th>
+                          <th className='text-left p-3 text-sm font-medium text-[#E6E6E6]/60'>Token</th>
+                          <th className='text-left p-3 text-sm font-medium text-[#E6E6E6]/60'>Amount</th>
+                          <th className='text-left p-3 text-sm font-medium text-[#E6E6E6]/60'>Type</th>
+                          <th className='text-left p-3 text-sm font-medium text-[#E6E6E6]/60'>Status</th>
+                          <th className='text-right p-3 text-sm font-medium text-[#E6E6E6]/60'>Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {transactions.map(tx => (
+                          <tr key={tx.id} className='border-b border-[#2E2E34] last:border-0'>
+                            <td className='p-3 text-sm'>
+                              {formatDistanceToNow(new Date(tx.createdAt), { addSuffix: true })}
+                            </td>
+                            <td className='p-3'>
+                              <div className='flex flex-col'>
+                                <span className='text-sm'>{tx.tokenSymbol}</span>
+                                <span className='text-xs text-[#E6E6E6]/60'>{truncateAddress(tx.tokenMint)}</span>
+                              </div>
+                            </td>
+                            <td className='p-3 text-sm'>{tx.amount}</td>
+                            <td className='p-3'>
+                              <Badge variant={tx.burnType === 'INSTANT' ? 'default' : 'secondary'}>
+                                {tx.burnType.toLowerCase()}
+                              </Badge>
+                            </td>
+                            <td className='p-3'>
+                              <Badge
+                                variant={
+                                  tx.status === 'CONFIRMED'
+                                    ? 'default'
+                                    : tx.status === 'PENDING'
+                                      ? 'secondary'
+                                      : 'destructive'
+                                }
+                              >
+                                {tx.status.toLowerCase()}
+                              </Badge>
+                            </td>
+                            <td className='p-3 text-right'>
+                              <Button
+                                variant='ghost'
+                                size='icon'
+                                onClick={() => window.open(`https://solscan.io/tx/${tx.txSignature}`, '_blank')}
+                                className='h-8 w-8'
+                              >
+                                <ExternalLink className='h-4 w-4' />
+                              </Button>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+
+              {/* Mobile view */}
+              <div className='sm:hidden space-y-4'>
+                {transactions.map(tx => (
+                  <div key={tx.id} className='bg-[#1A1B23] border border-[#2E2E34] rounded-lg p-4 space-y-3'>
+                    <div className='flex items-start justify-between gap-2'>
+                      <div className='flex-1 min-w-0'>
+                        <div className='flex items-center gap-2 mb-1'>
+                          <span className='text-sm font-medium'>{tx.tokenSymbol}</span>
+                          <Badge variant={tx.burnType === 'INSTANT' ? 'default' : 'secondary'}>
+                            {tx.burnType.toLowerCase()}
+                          </Badge>
+                        </div>
+                        <div className='text-xs text-[#E6E6E6]/60 truncate'>{tx.tokenMint}</div>
+                      </div>
+                      <Badge
+                        variant={
+                          tx.status === 'CONFIRMED' ? 'default' : tx.status === 'PENDING' ? 'secondary' : 'destructive'
+                        }
+                      >
+                        {tx.status.toLowerCase()}
+                      </Badge>
+                    </div>
+
+                    <div className='space-y-2 text-sm'>
+                      <div className='flex justify-between items-center'>
+                        <span className='text-[#E6E6E6]/60'>Amount</span>
+                        <span>{tx.amount}</span>
+                      </div>
+                      <div className='flex justify-between items-center'>
+                        <span className='text-[#E6E6E6]/60'>Date</span>
+                        <span>{formatDistanceToNow(new Date(tx.createdAt), { addSuffix: true })}</span>
+                      </div>
+                    </div>
+
+                    <div className='pt-2 border-t border-[#2E2E34]'>
+                      <Button
+                        variant='ghost'
+                        size='sm'
+                        onClick={() => window.open(`https://solscan.io/tx/${tx.txSignature}`, '_blank')}
+                        className='w-full text-[#9945FF] hover:text-[#9945FF] hover:bg-[#9945FF]/10'
+                      >
+                        <ExternalLink className='mr-2 h-4 w-4' />
+                        View on Solscan
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </>
           )}
         </div>
       </CardContent>
