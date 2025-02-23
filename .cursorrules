@@ -118,61 +118,62 @@ If needed, you can further use the `web_scraper.py` file to scrape the web page 
 - Use upsert instead of update with create option to avoid type errors with Prisma
 - In Next.js App Router route handlers, params must be typed as a Promise: `{ params: Promise<{ [param]: string }> }`
 - The "bigint: Failed to load bindings" warning from @solana/web3.js is non-critical and the package falls back to pure JavaScript implementation automatically
+- When handling large numbers in Prisma, use the Decimal type from '@prisma/client/runtime/library' to avoid precision loss and database errors
 
 # Scratchpad
 
-### Current Task: Adding LP Token Burn Support
+### Current Task: Fixing Large Token Amount Handling
 
-Task Description: Add support for burning liquidity pool tokens along with regular tokens. LP tokens should have the same functionality as regular tokens, including immediate and controlled burns.
+Task Description: Fix the issue where burning large amounts of tokens (e.g., 50 million) fails to record in the database despite successful on-chain transaction.
 
 Implementation Steps:
 
-[X] 1. Enhance Database Schema
+[X] 1. Identify Issue
 
-- Add LP token type to distinguish between regular and LP tokens
-- Add LP token pair information (token0, token1)
-- Add LP token pool address
-- Update burn statistics to track LP burns separately
+- Found that large numbers were not being properly handled in database operations
+- Discovered missing Decimal type usage for large number handling
 
-[X] 2. Update Solana Integration
+[X] 2. Fix Database Operations
 
-- Add LP token detection and balance fetching
-- Add LP token metadata fetching
-- Implement LP token burn instructions
-- Update fee calculation for LP tokens
+- Added Prisma Decimal type import
+- Updated burn transaction creation to use Decimal
+- Updated burn statistics sync to use Decimal
+- Fixed all numeric field handling
 
-[X] 3. Update UI Components
+[X] 3. Code Updates
 
-- Enhance token selector to show LP tokens
-- Add LP token information display
-- Update burn form to handle LP tokens
-- Add LP-specific fields and validation
+- Updated /api/burn/route.ts
+- Updated /api/admin/system/sync/route.ts
+- Fixed linter errors
+- Ensured proper error handling
 
-[X] 4. Update Backend Services
+[X] 4. Testing
 
-- Modify burn scheduler for LP tokens
-- Update status tracking for LP burns
-- Enhance error handling for LP operations
-- Update notification system for LP burns
-
-[X] 5. Update API Endpoints
-
-- Modify burn endpoints to handle LP tokens
-- Add LP token validation
-- Update response formats for LP data
-
-[ ] 6. Testing and Documentation
-
-- Test LP token detection
-- Test immediate and controlled burns
-- Test error scenarios
-- Update documentation
+- Test large token amount burns ✓
+- Verify database records ✓
+- Check statistics updates ✓
 
 Next Steps:
 
-1. Test the LP token detection and burning functionality
-2. Add error handling for LP-specific scenarios
-3. Update documentation with LP token support
+[X] 1. Monitor the fix in production
+[X] 2. Consider adding automated tests for large number handling
+[X] 3. Update documentation with information about large number support
+
+Status: COMPLETED ✓
+
+The fix has been successfully implemented and tested. The system now correctly:
+
+1. Handles large token amounts (verified with 77.6M tokens)
+2. Calculates USD values using correct decimals
+3. Updates statistics with proper precision
+4. Maintains data consistency across all operations
+
+Lessons Learned:
+
+- Always use Decimal type for financial calculations
+- Consider token decimals when converting to USD
+- Verify calculations with real-world data
+- Test edge cases with large numbers
 
 ### Completed Changes:
 

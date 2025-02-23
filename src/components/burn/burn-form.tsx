@@ -332,18 +332,6 @@ export function BurnForm() {
                           <p className='text-xs text-[#E6E6E6]/60'>Burn tokens immediately</p>
                         </div>
                       </FormItem>
-                      {/* <FormItem className='flex items-center space-x-3 space-y-0'>
-                        <FormControl>
-                          <RadioGroupItem value='CONTROLLED' />
-                        </FormControl>
-                        <div className='space-y-1'>
-                          <FormLabel className='text-[#E6E6E6] text-sm sm:text-base font-normal flex items-center gap-2'>
-                            <Clock className='w-4 h-4 text-[#9945FF]' />
-                            Controlled Burn
-                          </FormLabel>
-                          <p className='text-xs text-[#E6E6E6]/60'>Schedule burns over time</p>
-                        </div>
-                      </FormItem> */}
                     </RadioGroup>
                   </FormControl>
                   <FormMessage className='text-xs sm:text-sm' />

@@ -41,11 +41,8 @@ export function Transparency() {
           className='mx-auto max-w-4xl'
         >
           <div className='text-center'>
-            <h2 className='font-display mb-2 sm:mb-4 text-2xl sm:text-3xl font-bold md:text-4xl'>
-              Built on{' '}
-              <span className='bg-gradient-to-r from-[#9945FF] to-[#14F195] bg-clip-text text-transparent'>
-                Transparency
-              </span>
+            <h2 className='font-display mb-4 bg-gradient-to-r from-[#9945FF] to-[#14F195] bg-clip-text text-3xl font-bold text-transparent sm:text-4xl'>
+              Built on Transparency
             </h2>
             <p className='text-base max-w-2xl mx-auto sm:text-lg text-[#E6E6E6]/60'>
               We believe in complete transparency. Our platform is open source, our transactions are verifiable, and our

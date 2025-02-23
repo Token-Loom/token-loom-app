@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { prisma, executeWithRetry } from '@/lib/prisma'
-import { ExecutionStatus, BurnStatus } from '@prisma/client'
+import { BurnStatus } from '@prisma/client'
 
 const ADMIN_WALLETS = [process.env.ADMIN_WALLET || ''].filter(Boolean)
 
@@ -43,18 +43,16 @@ export async function GET() {
 
       if (tx.status === BurnStatus.CONFIRMED) {
         confirmedFees += fee
-        tx.executions.forEach(exec => {
-          if (exec.status === ExecutionStatus.COMPLETED) {
-            totalGasCosts += Number(exec.gasUsed || 0)
-          }
-        })
+        // Set fixed gas cost of 0.00008 SOL per completed transaction
+        totalGasCosts += 0.00008
       } else if (tx.status === BurnStatus.PENDING) {
         pendingFees += fee
       }
     })
 
     totalFees = confirmedFees + pendingFees
-    const netProfit = confirmedFees - totalGasCosts
+    // Net profit is just the confirmed fees - we don't subtract gas costs
+    const netProfit = confirmedFees
 
     // Process token profits
     const tokenProfitMap = new Map()
@@ -115,11 +113,8 @@ export async function GET() {
           if (!isAdminWallet) {
             acc[date].feesCollected += Number(tx.feeAmount || 0)
           }
-          tx.executions.forEach(exec => {
-            if (exec.status === ExecutionStatus.COMPLETED) {
-              acc[date].gasCosts += Number(exec.gasUsed || 0)
-            }
-          })
+          // Set fixed gas cost of 0.00008 SOL per completed transaction
+          acc[date].gasCosts += 0.00008
         }
         return acc
       }, {})
@@ -143,11 +138,8 @@ export async function GET() {
             tokenSymbol: tx.tokenSymbol,
             feeAmount: isAdminWallet ? 0 : tx.feeAmount,
             status: tx.status,
-            gasUsed: tx.executions[0]?.gasUsed || '0',
-            profit:
-              tx.status === BurnStatus.CONFIRMED && tx.executions[0]?.gasUsed
-                ? (isAdminWallet ? 0 : Number(tx.feeAmount)) - Number(tx.executions[0].gasUsed)
-                : null,
+            gasUsed: '0.00008',
+            profit: tx.status === BurnStatus.CONFIRMED ? (isAdminWallet ? 0 : Number(tx.feeAmount)) : null,
             completedAt: tx.executions[0]?.completedAt || tx.createdAt
           }
         }),

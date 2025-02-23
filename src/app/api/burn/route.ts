@@ -4,6 +4,7 @@ import { prisma } from '@/lib/prisma'
 import { BurnType, BurnStatus, TokenType, Prisma, ExecutionStatus } from '@prisma/client'
 import { generateBurnWallet } from '@/lib/solana/wallet'
 import { Connection, clusterApiUrl } from '@solana/web3.js'
+import { Decimal } from '@prisma/client/runtime/library'
 
 // Maximum number of retries for database operations
 const MAX_RETRIES = 3
@@ -29,6 +30,8 @@ const burnRequestSchema = z.object({
   tokenName: z.string(),
   tokenSymbol: z.string(),
   tokenType: z.enum(['REGULAR', 'LP']).default('REGULAR'),
+  tokenPriceUSD: z.string(), // Current token price in USD
+  tokenDecimals: z.number(), // Token decimals
   amount: z.string(),
   burnType: z.enum(['INSTANT', 'CONTROLLED']),
   message: z.string().optional(),
@@ -116,6 +119,9 @@ export async function POST(request: Request) {
       })
     )
 
+    // Convert amount string to Decimal for proper handling of large numbers
+    const burnAmount = new Decimal(data.amount)
+
     // Create the burn transaction with retry mechanism
     const transaction = await executeWithRetry(() =>
       prisma.burnTransaction.create({
@@ -124,10 +130,12 @@ export async function POST(request: Request) {
           tokenName: data.tokenName,
           tokenSymbol: data.tokenSymbol,
           tokenType: data.tokenType as TokenType,
-          amount: data.amount,
+          tokenPriceUSD: new Decimal(data.tokenPriceUSD),
+          tokenDecimals: data.tokenDecimals,
+          amount: burnAmount,
           burnType: data.burnType as BurnType,
-          feeAmount: feeAmount.toString(),
-          burnMessage: data.message,
+          feeAmount: new Decimal(feeAmount.toString()),
+          error: data.message,
           status: BurnStatus.PENDING,
           userWallet: data.userWallet,
           burnWalletId: burnWallet.id,
@@ -142,15 +150,15 @@ export async function POST(request: Request) {
                 lpPoolAddress: data.lpPoolAddress
               }
             : {}),
-          // Create scheduled burns if provided
-          scheduledBurns:
+          // Create scheduled burn if provided
+          scheduledBurn:
             data.burnType === 'CONTROLLED' && data.scheduledBurns
               ? {
                   create: data.scheduledBurns.map(burn => ({
                     scheduledFor: new Date(burn.scheduledFor),
-                    amount: burn.amount,
+                    amount: new Decimal(burn.amount),
                     status: BurnStatus.PENDING
-                  }))
+                  }))[0] // Only create the first scheduled burn
                 }
               : undefined
         }
@@ -162,11 +170,10 @@ export async function POST(request: Request) {
       maxSupportedTransactionVersion: 0
     })
     // Convert lamports to SOL (1 SOL = 1e9 lamports)
-    const gasUsed = (txInfo?.meta?.fee || 0) / 1e9
+    const gasUsed = new Decimal((txInfo?.meta?.fee || 0).toString()).div(new Decimal('1000000000'))
 
     // For admin wallets, use gas cost as fee amount
-    const effectiveFeeAmount = isAdminWallet ? gasUsed : feeAmount
-    const effectiveNetProfit = isAdminWallet ? 0 : feeAmount - gasUsed
+    const effectiveFeeAmount = isAdminWallet ? gasUsed : new Decimal(feeAmount.toString())
 
     // Create execution record with gas cost
     await executeWithRetry(() =>
@@ -175,7 +182,7 @@ export async function POST(request: Request) {
           transactionId: transaction.id,
           status: ExecutionStatus.STARTED,
           txSignature: data.signature,
-          gasUsed: gasUsed.toString()
+          gasUsed
         }
       })
     )
@@ -211,9 +218,15 @@ export async function POST(request: Request) {
         where: { id: '1' },
         create: {
           id: '1',
-          totalGasCosts: gasUsed.toString(),
-          totalFeesCollected: effectiveFeeAmount.toString(),
-          netProfit: effectiveNetProfit.toString()
+          totalGasCosts: gasUsed,
+          totalFeesCollected: effectiveFeeAmount,
+          netProfit: effectiveFeeAmount.sub(gasUsed),
+          totalTokensBurned: 0,
+          totalTransactions: 1,
+          uniqueTokensBurned: 1,
+          instantBurnsCount: data.burnType === 'INSTANT' ? 1 : 0,
+          controlledBurnsCount: data.burnType === 'CONTROLLED' ? 1 : 0,
+          lastUpdated: new Date()
         },
         update: {
           totalGasCosts: {
@@ -223,7 +236,16 @@ export async function POST(request: Request) {
             increment: effectiveFeeAmount
           },
           netProfit: {
-            increment: effectiveNetProfit
+            increment: effectiveFeeAmount.sub(gasUsed)
+          },
+          totalTransactions: {
+            increment: 1
+          },
+          instantBurnsCount: {
+            increment: data.burnType === 'INSTANT' ? 1 : 0
+          },
+          controlledBurnsCount: {
+            increment: data.burnType === 'CONTROLLED' ? 1 : 0
           }
         }
       })
@@ -234,6 +256,9 @@ export async function POST(request: Request) {
       prisma.burnStatistic.upsert({
         where: { tokenMint: data.tokenMint },
         update: {
+          totalBurned: {
+            increment: burnAmount
+          },
           totalTransactions: { increment: 1 },
           [data.burnType === 'INSTANT' ? 'instantBurns' : 'controlledBurns']: { increment: 1 },
           totalFeesCollected: { increment: effectiveFeeAmount }
@@ -241,11 +266,12 @@ export async function POST(request: Request) {
         create: {
           tokenMint: data.tokenMint,
           tokenSymbol: data.tokenSymbol,
-          totalBurned: '0',
+          tokenType: data.tokenType,
+          totalBurned: burnAmount,
           totalTransactions: 1,
           instantBurns: data.burnType === 'INSTANT' ? 1 : 0,
           controlledBurns: data.burnType === 'CONTROLLED' ? 1 : 0,
-          totalFeesCollected: effectiveFeeAmount.toString()
+          totalFeesCollected: effectiveFeeAmount
         }
       })
     )

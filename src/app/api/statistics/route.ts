@@ -1,39 +1,54 @@
 import { NextResponse } from 'next/server'
 import { prisma, executeWithRetry } from '@/lib/prisma'
-import { BurnStatus } from '@prisma/client'
+import { Decimal } from '@prisma/client/runtime/library'
+import { formatNumber } from '@/lib/utils'
 
 export async function GET() {
   try {
-    // Get confirmed transactions count
-    const totalTransactions = await executeWithRetry(() =>
-      prisma.burnTransaction.count({
-        where: { status: BurnStatus.CONFIRMED }
+    // Get global statistics
+    const globalStats = await executeWithRetry(() =>
+      prisma.globalStatistic.findFirst({
+        where: { id: '1' }
       })
     )
 
-    // Get unique tokens count
-    const uniqueTokens = await executeWithRetry(() =>
-      prisma.burnTransaction
-        .groupBy({
-          by: ['tokenMint'],
-          where: { status: BurnStatus.CONFIRMED }
-        })
-        .then(groups => groups.length)
+    // Get total burned USD value from burn transactions
+    const burnTransactions = await executeWithRetry(() =>
+      prisma.burnTransaction.findMany({
+        where: {
+          status: 'CONFIRMED'
+        },
+        select: {
+          amount: true,
+          tokenPriceUSD: true,
+          tokenDecimals: true
+        }
+      })
     )
 
-    // Calculate total burned in SOL value
-    // For now this will be 0 since the tokens (FLOF) have no value
-    // In production, you would fetch the token's SOL price from an oracle or price feed
-    const totalBurnedInSol = 0
+    // Calculate total value by summing up each transaction's amount * price
+    const totalValue = burnTransactions.reduce((sum, tx) => {
+      const amount = tx.amount || new Decimal(0)
+      const price = tx.tokenPriceUSD || new Decimal(0)
+
+      // Calculate value in USD - directly multiply amount by price
+      // No need to adjust for decimals since price is already per token unit
+      const valueUSD = amount.mul(price)
+
+      return sum.add(valueUSD)
+    }, new Decimal(0))
+
+    // Format decimal values
+    const totalBurned = globalStats?.totalFeesCollected || new Decimal(0)
 
     return NextResponse.json({
       success: true,
       data: {
-        totalBurned: totalBurnedInSol,
-        totalTransactions,
-        uniqueTokens,
-        totalValue: 0, // Burned tokens have no value
-        lastUpdated: new Date()
+        totalBurned: totalBurned.toFixed(4), // Format to 4 decimal places
+        totalTransactions: globalStats?.totalTransactions || 0,
+        uniqueTokens: globalStats?.uniqueTokensBurned || 0,
+        totalValue: formatNumber(Math.round(Number(totalValue))), // Format with commas
+        lastUpdated: globalStats?.lastUpdated || new Date()
       }
     })
   } catch (error) {

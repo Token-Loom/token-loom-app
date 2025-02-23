@@ -1,0 +1,10 @@
+-- Add USD fields to BurnStatistic
+ALTER TABLE "BurnStatistic"
+ADD COLUMN "totalBurnedUSD" DECIMAL NOT NULL DEFAULT 0,
+ADD COLUMN "totalFeesCollectedUSD" DECIMAL NOT NULL DEFAULT 0;
+
+-- Add USD fields to GlobalStatistic
+ALTER TABLE "GlobalStatistic"
+ADD COLUMN "totalFeesCollectedUSD" DECIMAL NOT NULL DEFAULT 0,
+ADD COLUMN "totalGasCostsUSD" DECIMAL NOT NULL DEFAULT 0,
+ADD COLUMN "netProfitUSD" DECIMAL NOT NULL DEFAULT 0; 

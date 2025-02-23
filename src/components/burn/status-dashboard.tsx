@@ -7,9 +7,10 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Badge } from '@/components/ui/badge'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { ScrollArea } from '@/components/ui/scroll-area'
-import { Loader2, AlertCircle } from 'lucide-react'
+import { AlertCircle } from 'lucide-react'
 import { format } from 'date-fns'
 import { cn } from '@/lib/utils'
+import { Skeleton } from '@/components/ui/skeleton'
 
 interface Transaction {
   id: string
@@ -172,9 +173,7 @@ export function StatusDashboard() {
         )}
 
         {isLoading && transactions.length === 0 ? (
-          <div className='flex items-center justify-center py-8'>
-            <Loader2 className='h-8 w-8 animate-spin text-[#9945FF]' />
-          </div>
+          <Skeleton className='h-16 w-full bg-[#1E1E24]' />
         ) : transactions.length === 0 ? (
           <div className='text-center py-8 text-[#A3A3A3]'>No burn transactions found</div>
         ) : (

@@ -3,6 +3,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { formatTokenAmount } from '@/lib/utils'
 import { ScrollArea } from '@/components/ui/scroll-area'
+import { Skeleton } from '@/components/ui/skeleton'
 
 interface ProfitData {
   totalProfit: {
@@ -54,14 +55,6 @@ export function ProfitDashboard() {
     return () => clearInterval(interval)
   }, [])
 
-  if (loading) {
-    return <div className='text-center py-8 text-[#E6E6E6]/60'>Loading profit data...</div>
-  }
-
-  if (!profitData) {
-    return <div className='text-center py-8 text-[#E6E6E6]/60'>No profit data available</div>
-  }
-
   return (
     <div className='space-y-4 sm:space-y-6'>
       {/* Total Profit Overview */}
@@ -73,7 +66,13 @@ export function ProfitDashboard() {
           </CardHeader>
           <CardContent>
             <div className='text-xl sm:text-2xl font-bold text-[#14F195]'>
-              {formatTokenAmount(profitData.totalProfit.feesCollected)} SOL
+              {loading ? (
+                <Skeleton className='h-8 w-32 bg-[#1E1E24]' />
+              ) : profitData ? (
+                `${formatTokenAmount(profitData.totalProfit.feesCollected)} SOL`
+              ) : (
+                '-'
+              )}
             </div>
           </CardContent>
         </Card>
@@ -85,7 +84,13 @@ export function ProfitDashboard() {
           </CardHeader>
           <CardContent>
             <div className='text-xl sm:text-2xl font-bold text-[#9945FF]'>
-              {formatTokenAmount(profitData.totalProfit.gasCosts)} SOL
+              {loading ? (
+                <Skeleton className='h-8 w-32 bg-[#1E1E24]' />
+              ) : profitData ? (
+                `${formatTokenAmount(profitData.totalProfit.gasCosts)} SOL`
+              ) : (
+                '-'
+              )}
             </div>
           </CardContent>
         </Card>
@@ -97,7 +102,13 @@ export function ProfitDashboard() {
           </CardHeader>
           <CardContent>
             <div className='text-xl sm:text-2xl font-bold text-[#00C2FF]'>
-              {formatTokenAmount(profitData.totalProfit.netProfit)} SOL
+              {loading ? (
+                <Skeleton className='h-8 w-32 bg-[#1E1E24]' />
+              ) : profitData ? (
+                `${formatTokenAmount(profitData.totalProfit.netProfit)} SOL`
+              ) : (
+                '-'
+              )}
             </div>
           </CardContent>
         </Card>
@@ -123,17 +134,45 @@ export function ProfitDashboard() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {profitData.tokenProfits.map(token => (
-                    <TableRow key={token.tokenSymbol} className='hover:bg-[#1E1E24]/50'>
-                      <TableCell className='font-medium text-[#E6E6E6]'>{token.tokenSymbol}</TableCell>
-                      <TableCell className='text-[#E6E6E6]'>
-                        {formatTokenAmount(token.totalFeesCollected)} SOL
+                  {loading ? (
+                    Array.from({ length: 3 }).map((_, i) => (
+                      <TableRow key={i} className='hover:bg-[#1E1E24]/50'>
+                        <TableCell>
+                          <Skeleton className='h-6 w-24 bg-[#1E1E24]' />
+                        </TableCell>
+                        <TableCell>
+                          <Skeleton className='h-6 w-20 bg-[#1E1E24]' />
+                        </TableCell>
+                        <TableCell>
+                          <Skeleton className='h-6 w-16 bg-[#1E1E24]' />
+                        </TableCell>
+                        <TableCell>
+                          <Skeleton className='h-6 w-16 bg-[#1E1E24]' />
+                        </TableCell>
+                        <TableCell>
+                          <Skeleton className='h-6 w-16 bg-[#1E1E24]' />
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  ) : profitData?.tokenProfits.length ? (
+                    profitData.tokenProfits.map(token => (
+                      <TableRow key={token.tokenSymbol} className='hover:bg-[#1E1E24]/50'>
+                        <TableCell className='font-medium text-[#E6E6E6]'>{token.tokenSymbol}</TableCell>
+                        <TableCell className='text-[#E6E6E6]'>
+                          {formatTokenAmount(token.totalFeesCollected)} SOL
+                        </TableCell>
+                        <TableCell className='text-[#E6E6E6]'>{token.totalTransactions}</TableCell>
+                        <TableCell className='text-[#E6E6E6]'>{token.instantBurns}</TableCell>
+                        <TableCell className='text-[#E6E6E6]'>{token.controlledBurns}</TableCell>
+                      </TableRow>
+                    ))
+                  ) : (
+                    <TableRow>
+                      <TableCell colSpan={5} className='text-center text-[#E6E6E6]/60'>
+                        No token profit data available
                       </TableCell>
-                      <TableCell className='text-[#E6E6E6]'>{token.totalTransactions}</TableCell>
-                      <TableCell className='text-[#E6E6E6]'>{token.instantBurns}</TableCell>
-                      <TableCell className='text-[#E6E6E6]'>{token.controlledBurns}</TableCell>
                     </TableRow>
-                  ))}
+                  )}
                 </TableBody>
               </Table>
             </div>
@@ -161,15 +200,43 @@ export function ProfitDashboard() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {profitData.recentTransactions.map(tx => (
-                    <TableRow key={tx.signature} className='hover:bg-[#1E1E24]/50'>
-                      <TableCell className='font-medium text-[#E6E6E6]'>{tx.tokenSymbol}</TableCell>
-                      <TableCell className='text-[#E6E6E6]'>{formatTokenAmount(tx.feeAmount)} SOL</TableCell>
-                      <TableCell className='text-[#E6E6E6]'>{formatTokenAmount(tx.gasUsed)} SOL</TableCell>
-                      <TableCell className='text-[#E6E6E6]'>{formatTokenAmount(tx.profit)} SOL</TableCell>
-                      <TableCell className='text-[#E6E6E6]'>{new Date(tx.completedAt).toLocaleString()}</TableCell>
+                  {loading ? (
+                    Array.from({ length: 5 }).map((_, i) => (
+                      <TableRow key={i} className='hover:bg-[#1E1E24]/50'>
+                        <TableCell>
+                          <Skeleton className='h-6 w-24 bg-[#1E1E24]' />
+                        </TableCell>
+                        <TableCell>
+                          <Skeleton className='h-6 w-20 bg-[#1E1E24]' />
+                        </TableCell>
+                        <TableCell>
+                          <Skeleton className='h-6 w-20 bg-[#1E1E24]' />
+                        </TableCell>
+                        <TableCell>
+                          <Skeleton className='h-6 w-20 bg-[#1E1E24]' />
+                        </TableCell>
+                        <TableCell>
+                          <Skeleton className='h-6 w-32 bg-[#1E1E24]' />
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  ) : profitData?.recentTransactions.length ? (
+                    profitData.recentTransactions.map(tx => (
+                      <TableRow key={tx.signature} className='hover:bg-[#1E1E24]/50'>
+                        <TableCell className='font-medium text-[#E6E6E6]'>{tx.tokenSymbol}</TableCell>
+                        <TableCell className='text-[#E6E6E6]'>{formatTokenAmount(tx.feeAmount)} SOL</TableCell>
+                        <TableCell className='text-[#E6E6E6]'>{formatTokenAmount(tx.gasUsed)} SOL</TableCell>
+                        <TableCell className='text-[#E6E6E6]'>{formatTokenAmount(tx.profit)} SOL</TableCell>
+                        <TableCell className='text-[#E6E6E6]'>{new Date(tx.completedAt).toLocaleString()}</TableCell>
+                      </TableRow>
+                    ))
+                  ) : (
+                    <TableRow>
+                      <TableCell colSpan={5} className='text-center text-[#E6E6E6]/60'>
+                        No recent transactions available
+                      </TableCell>
                     </TableRow>
-                  ))}
+                  )}
                 </TableBody>
               </Table>
             </div>

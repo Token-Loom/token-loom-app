@@ -46,7 +46,7 @@ export function Benefits() {
   return (
     <div className='container mt-[140px] sm:mt-[240px]'>
       <div className='mx-auto max-w-2xl text-center'>
-        <h2 className='font-display mb-3 sm:mb-4 text-2xl sm:text-3xl font-bold tracking-tight text-[#E6E6E6] md:text-4xl'>
+        <h2 className='font-display mb-4 bg-gradient-to-r from-[#9945FF] to-[#14F195] bg-clip-text text-3xl font-bold text-transparent sm:text-4xl'>
           Platform Benefits
         </h2>
         <p className='text-base max-w-2xl mx-auto sm:text-lg text-[#E6E6E6]/60'>

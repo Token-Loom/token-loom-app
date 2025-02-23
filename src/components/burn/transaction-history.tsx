@@ -15,6 +15,7 @@ import { ExternalLink, Download, Loader2, RefreshCw, Pause } from 'lucide-react'
 import { truncateAddress } from '@/lib/utils'
 import { BurnStatus, BurnType } from '@prisma/client'
 import { DateRange } from 'react-day-picker'
+import { Skeleton } from '@/components/ui/skeleton'
 
 interface Transaction {
   id: string
@@ -197,36 +198,42 @@ export function TransactionHistory() {
       <CardContent>
         <div className='flex flex-col gap-4'>
           <div className='flex flex-wrap gap-4'>
-            <div className='flex-1 min-w-[200px]'>
-              <Input
-                placeholder='Search by token name or address'
-                value={tokenFilter}
-                onChange={e => setTokenFilter(e.target.value)}
-              />
-            </div>
-            <DatePickerWithRange value={dateRange} onChange={setDateRange} />
-            <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className='w-[180px]'>
-                <SelectValue placeholder='Filter by status' />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value='ALL'>All</SelectItem>
-                <SelectItem value='PENDING'>Pending</SelectItem>
-                <SelectItem value='CONFIRMED'>Confirmed</SelectItem>
-                <SelectItem value='FAILED'>Failed</SelectItem>
-              </SelectContent>
-            </Select>
-            <Button variant='outline' onClick={handleExport} disabled={!transactions.length || isLoading}>
-              {isLoading ? <Loader2 className='mr-2 h-4 w-4 animate-spin' /> : <Download className='mr-2 h-4 w-4' />}
-              Export
-            </Button>
-            <Button variant='outline' onClick={() => setIsPolling(!isPolling)}>
-              {isPolling ? <Pause className='mr-2 h-4 w-4' /> : <RefreshCw className='mr-2 h-4 w-4' />}
-              {isPolling ? 'Stop Auto-Refresh' : 'Start Auto-Refresh'}
-            </Button>
+            <>
+              <div className='flex-1 min-w-[200px]'>
+                <Input
+                  placeholder='Search by token name or address'
+                  value={tokenFilter}
+                  onChange={e => setTokenFilter(e.target.value)}
+                />
+              </div>
+              <DatePickerWithRange value={dateRange} onChange={setDateRange} />
+              <Select value={statusFilter} onValueChange={setStatusFilter}>
+                <SelectTrigger className='w-[180px]'>
+                  <SelectValue placeholder='Filter by status' />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value='ALL'>All</SelectItem>
+                  <SelectItem value='PENDING'>Pending</SelectItem>
+                  <SelectItem value='CONFIRMED'>Confirmed</SelectItem>
+                  <SelectItem value='FAILED'>Failed</SelectItem>
+                </SelectContent>
+              </Select>
+              <Button variant='outline' onClick={handleExport} disabled={!transactions.length || isLoading}>
+                {isLoading ? <Loader2 className='mr-2 h-4 w-4 animate-spin' /> : <Download className='mr-2 h-4 w-4' />}
+                Export
+              </Button>
+              <Button variant='outline' onClick={() => setIsPolling(!isPolling)}>
+                {isPolling ? <Pause className='mr-2 h-4 w-4' /> : <RefreshCw className='mr-2 h-4 w-4' />}
+                {isPolling ? 'Stop Auto-Refresh' : 'Start Auto-Refresh'}
+              </Button>
+            </>
           </div>
 
-          <DataTable columns={columns} data={transactions} pageSize={pagination.limit} />
+          {isLoading ? (
+            <Skeleton className='h-16 w-full bg-[#1E1E24]' />
+          ) : (
+            <DataTable columns={columns} data={transactions} pageSize={pagination.limit} />
+          )}
         </div>
       </CardContent>
     </Card>

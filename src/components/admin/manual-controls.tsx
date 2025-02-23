@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Loader2, Play, Pause, RefreshCw } from 'lucide-react'
 import { toast } from 'sonner'
+import { Skeleton } from '@/components/ui/skeleton'
 
 interface SystemStatus {
   isRunning: boolean
@@ -184,8 +185,8 @@ export function ManualControls() {
         </CardHeader>
         <CardContent className='space-y-4'>
           {isConfigLoading ? (
-            <div className='flex items-center justify-center py-8'>
-              <Loader2 className='h-8 w-8 animate-spin text-[#9945FF]' />
+            <div className='flex items-center justify-center'>
+              <Skeleton className='h-16 w-full' />
             </div>
           ) : (
             <>

@@ -40,46 +40,57 @@ model BurnWallet {
 }
 
 model BurnTransaction {
-  id             String          @id @default(uuid())
-  userWallet     String?
-  tokenMint      String
-  tokenName      String
-  tokenSymbol    String
-  tokenType      TokenType       @default(REGULAR)
-  lpToken0Mint   String?
-  lpToken1Mint   String?
-  lpToken0Symbol String?
-  lpToken1Symbol String?
-  lpPoolAddress  String?
-  amount         Decimal
-  burnWalletId   String
-  txSignature    String          @unique
-  status         BurnStatus
-  burnType       BurnType
-  feeAmount      Decimal
-  burnMessage    String?
-  createdAt      DateTime        @default(now())
-  confirmedAt    DateTime?
-  executions     BurnExecution[]
-  burnWallet     BurnWallet      @relation(fields: [burnWalletId], references: [id])
-  user           User?           @relation(fields: [userWallet], references: [walletAddress])
-  notifications  Notification[]
-  scheduledBurns ScheduledBurn[]
+  id              String          @id @default(cuid())
+  userWallet      String
+  tokenMint       String
+  tokenName       String?
+  tokenSymbol     String?
+  tokenType       TokenType       @default(REGULAR)
+  tokenPriceUSD   Decimal         @default(0)
+  tokenDecimals   Int             @default(6)
+  lpToken0Mint    String?
+  lpToken1Mint    String?
+  lpToken0Symbol  String?
+  lpToken1Symbol  String?
+  lpPoolAddress   String?
+  amount          Decimal
+  feeAmount       Decimal
+  burnType        BurnType        @default(INSTANT)
+  status          BurnStatus      @default(PENDING)
+  signature       String?
+  error           String?
+  burnWalletId    String
+  txSignature     String?         @unique
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime?       @default(now())
+  confirmedAt     DateTime?
+  scheduledBurnId String?
+  executions      BurnExecution[]
+  burnWallet      BurnWallet      @relation(fields: [burnWalletId], references: [id])
+  user            User?           @relation(fields: [userWallet], references: [walletAddress])
+  notifications   Notification[]
+  scheduledBurn   ScheduledBurn?  @relation("ScheduledBurnTransaction")
+
+  @@index([tokenMint])
+  @@index([status])
+  @@index([burnType])
+  @@index([scheduledBurnId])
 }
 
 model ScheduledBurn {
-  id            String          @id @default(uuid())
-  transactionId String
-  scheduledFor  DateTime
-  amount        Decimal
+  id            String          @id @default(cuid())
+  transaction   BurnTransaction @relation("ScheduledBurnTransaction", fields: [transactionId], references: [id])
+  transactionId String          @unique
   status        BurnStatus      @default(PENDING)
-  executedAt    DateTime?
+  scheduledFor  DateTime
   createdAt     DateTime        @default(now())
-  retryCount    Int             @default(0)
-  nextRetryAt   DateTime?
-  errorMessage  String?
+  updatedAt     DateTime?       @default(now())
+  executedAt    DateTime?
+  error         String?
   executions    BurnExecution[]
-  transaction   BurnTransaction @relation(fields: [transactionId], references: [id])
+
+  @@index([status])
+  @@index([scheduledFor])
 }
 
 model BurnExecution {
@@ -111,34 +122,39 @@ model Notification {
 }
 
 model BurnStatistic {
-  id                 String    @id @default(uuid())
-  tokenMint          String    @unique
-  tokenSymbol        String
-  tokenType          TokenType @default(REGULAR)
-  totalBurned        Decimal
-  totalTransactions  Int       @default(0)
-  instantBurns       Int       @default(0)
-  controlledBurns    Int       @default(0)
-  totalFeesCollected Decimal   @default(0)
-  lastUpdated        DateTime  @updatedAt
-  lpToken0Mint       String?
-  lpToken1Mint       String?
-  lpToken0Symbol     String?
-  lpToken1Symbol     String?
-  lpPoolAddress      String?
+  id                    String    @id @default(uuid())
+  tokenMint             String    @unique
+  tokenSymbol           String
+  tokenType             TokenType @default(REGULAR)
+  totalBurned           Decimal
+  totalBurnedUSD        Decimal   @default(0)
+  totalTransactions     Int       @default(0)
+  instantBurns          Int       @default(0)
+  controlledBurns       Int       @default(0)
+  totalFeesCollected    Decimal   @default(0)
+  totalFeesCollectedUSD Decimal   @default(0)
+  lastUpdated           DateTime  @updatedAt
+  lpToken0Mint          String?
+  lpToken1Mint          String?
+  lpToken0Symbol        String?
+  lpToken1Symbol        String?
+  lpPoolAddress         String?
 }
 
 model GlobalStatistic {
-  id                   String   @id @default(uuid())
-  totalTokensBurned    Int      @default(0)
-  totalTransactions    Int      @default(0)
-  uniqueTokensBurned   Int      @default(0)
-  totalFeesCollected   Decimal  @default(0)
-  totalGasCosts        Decimal  @default(0)
-  netProfit            Decimal  @default(0)
-  instantBurnsCount    Int      @default(0)
-  controlledBurnsCount Int      @default(0)
-  lastUpdated          DateTime @updatedAt
+  id                    String   @id @default(uuid())
+  totalTokensBurned     Int      @default(0)
+  totalTransactions     Int      @default(0)
+  uniqueTokensBurned    Int      @default(0)
+  totalFeesCollected    Decimal  @default(0)
+  totalFeesCollectedUSD Decimal  @default(0)
+  totalGasCosts         Decimal  @default(0)
+  totalGasCostsUSD      Decimal  @default(0)
+  netProfit             Decimal  @default(0)
+  netProfitUSD          Decimal  @default(0)
+  instantBurnsCount     Int      @default(0)
+  controlledBurnsCount  Int      @default(0)
+  lastUpdated           DateTime @updatedAt
 }
 
 model TokenMetric {

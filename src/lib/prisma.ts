@@ -14,10 +14,37 @@ if (!process.env.DATABASE_URL) {
 const MAX_RETRIES = 3
 const RETRY_DELAY = 1000 // 1 second
 
-export async function executeWithRetry<T>(operation: () => Promise<T>, retryCount = 0): Promise<T> {
+// Create a function to get a new Prisma client instance
+function getNewPrismaClient() {
+  // Configure database connection parameters
+  const url = new URL(process.env.DATABASE_URL as string)
+  url.searchParams.append('statement_cache_size', '0')
+  url.searchParams.append('pgbouncer', 'true')
+  url.searchParams.append('connection_limit', '1')
+
+  return new PrismaClient({
+    log: process.env.NODE_ENV === 'development' ? ['query', 'error', 'warn'] : ['error'],
+    datasources: {
+      db: {
+        url: url.toString()
+      }
+    }
+  })
+}
+
+// Export the default client for general use
+export const prisma = getNewPrismaClient()
+
+export async function executeWithRetry<T>(operation: (client: PrismaClient) => Promise<T>, retryCount = 0): Promise<T> {
+  const client = getNewPrismaClient()
+
   try {
-    return await operation()
+    const result = await operation(client)
+    await client.$disconnect()
+    return result
   } catch (error) {
+    await client.$disconnect()
+
     // Check if it's a connection or prepared statement error
     if (
       error instanceof Prisma.PrismaClientKnownRequestError ||
@@ -29,43 +56,12 @@ export async function executeWithRetry<T>(operation: () => Promise<T>, retryCoun
         // Wait before retrying
         await new Promise(resolve => setTimeout(resolve, RETRY_DELAY))
 
-        // Disconnect and reconnect to clear the connection pool
-        await prisma.$disconnect()
-        await prisma.$connect()
-
-        // Retry the operation
+        // Retry the operation with a new client
         return executeWithRetry(operation, retryCount + 1)
       }
     }
     throw error
   }
-}
-
-const prismaClientSingleton = () => {
-  const client = new PrismaClient({
-    log: process.env.NODE_ENV === 'development' ? ['query', 'error', 'warn'] : ['error'],
-    datasources: {
-      db: {
-        url: process.env.DATABASE_URL
-      }
-    }
-  })
-
-  // Configure connection for production
-  if (process.env.NODE_ENV === 'production') {
-    client.$connect().catch(err => {
-      console.error('Failed to connect to database:', err)
-      process.exit(1)
-    })
-  }
-
-  return client
-}
-
-export const prisma = globalThis.prisma ?? prismaClientSingleton()
-
-if (process.env.NODE_ENV !== 'production') {
-  globalThis.prisma = prisma
 }
 
 // Handle cleanup on process termination

@@ -9,11 +9,41 @@ import { useInView } from 'react-intersection-observer'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 
 interface BurnStats {
-  totalBurned: number // Now represents SOL value of burned tokens
+  totalBurned: string // Total fees collected in SOL
   totalTransactions: number
   uniqueTokens: number
-  totalValue: number
+  totalValue: string // Total burned value in USD
   lastUpdated: Date
+}
+
+interface StatCardProps {
+  title: string
+  value: string | null
+  color: string
+  delay: number
+  inView: boolean
+}
+
+function StatCard({ title, value, color, delay, inView }: StatCardProps) {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={inView ? { opacity: 1, y: 0 } : {}}
+      transition={{ duration: 0.6, delay }}
+    >
+      <Card className='relative overflow-hidden border-[#1E1E24] bg-black/20 backdrop-blur'>
+        <div className='absolute inset-0 bg-gradient-to-r from-[#9945FF]/5 to-[#14F195]/5 opacity-50' />
+        <div className='relative p-6'>
+          <div className='text-sm font-medium' style={{ color }}>
+            {title}
+          </div>
+          <div className='mt-2 text-2xl font-bold text-[#E6E6E6]'>
+            {value === null ? <Skeleton className='h-8 w-24 bg-[#1E1E24]' /> : value}
+          </div>
+        </div>
+      </Card>
+    </motion.div>
+  )
 }
 
 export function BurnStatistics() {
@@ -62,7 +92,7 @@ export function BurnStatistics() {
           className='mx-auto max-w-6xl'
         >
           <div className='text-center mb-8 sm:mb-16'>
-            <h2 className='font-display mb-3 sm:mb-4 text-2xl sm:text-3xl font-bold tracking-tight text-[#E6E6E6] md:text-4xl'>
+            <h2 className='font-display mb-4 bg-gradient-to-r from-[#9945FF] to-[#14F195] bg-clip-text text-3xl font-bold text-transparent sm:text-4xl'>
               Burn Statistics
             </h2>
             <p className='text-base max-w-2xl mx-auto sm:text-lg text-[#E6E6E6]/60'>
@@ -78,8 +108,8 @@ export function BurnStatistics() {
           ) : (
             <div className='grid gap-4 sm:gap-6 grid-cols-2 sm:grid-cols-2 lg:grid-cols-4'>
               <StatCard
-                title='Total Burned (SOL)'
-                value={loading ? null : `${formatNumber(stats?.totalBurned || 0)} SOL`}
+                title='Total Fees (SOL)'
+                value={loading ? null : `${stats?.totalBurned || '0'} SOL`}
                 color='#9945FF'
                 delay={0.1}
                 inView={inView}
@@ -100,7 +130,7 @@ export function BurnStatistics() {
               />
               <StatCard
                 title='Total Value'
-                value={loading ? null : `$${formatNumber(stats?.totalValue || 0)}`}
+                value={loading ? null : `$${stats?.totalValue || '0'}`}
                 color='#9945FF'
                 delay={0.4}
                 inView={inView}
@@ -110,42 +140,5 @@ export function BurnStatistics() {
         </motion.div>
       </div>
     </section>
-  )
-}
-
-function StatCard({
-  title,
-  value,
-  color,
-  delay,
-  inView
-}: {
-  title: string
-  value: string | null
-  color: string
-  delay: number
-  inView: boolean
-}) {
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 10 }}
-      animate={inView ? { opacity: 1, y: 0 } : {}}
-      transition={{ delay, duration: 0.4 }}
-    >
-      <Card className='group relative overflow-hidden border-white/5 bg-[#1A1B23] p-3 sm:p-6 transition-all duration-300 hover:border-white/10'>
-        <div className='relative'>
-          <h3 className='text-xs sm:text-sm font-medium' style={{ color }}>
-            {title}
-          </h3>
-          <div className='mt-1 sm:mt-2'>
-            {value ? (
-              <p className='text-lg sm:text-2xl font-semibold text-[#E6E6E6]'>{value}</p>
-            ) : (
-              <Skeleton className='h-6 sm:h-8 w-16 sm:w-24 bg-[#1E1E24]' />
-            )}
-          </div>
-        </div>
-      </Card>
-    </motion.div>
   )
 }

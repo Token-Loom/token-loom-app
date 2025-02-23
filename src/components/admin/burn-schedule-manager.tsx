@@ -9,9 +9,9 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { BurnStatus } from '@prisma/client'
 import { formatTokenAmount } from '@/lib/utils'
-import { Loader2, Play, Pause, RotateCcw, AlertCircle } from 'lucide-react'
+import { Play, Pause, RotateCcw, AlertCircle } from 'lucide-react'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
-
+import { Skeleton } from '@/components/ui/skeleton'
 interface ScheduledBurn {
   id: string
   transactionId: string
@@ -187,7 +187,7 @@ export function BurnScheduleManager() {
               disabled={isProcessing || canRetry}
             >
               {isProcessing ? (
-                <Loader2 className='h-4 w-4 animate-spin' />
+                <Skeleton className='h-16 w-full' />
               ) : isPaused ? (
                 <Play className='h-4 w-4' />
               ) : (
@@ -222,8 +222,8 @@ export function BurnScheduleManager() {
             </AlertDescription>
           </Alert>
         ) : isLoading ? (
-          <div className='flex items-center justify-center py-8'>
-            <Loader2 className='h-8 w-8 animate-spin text-[#9945FF]' />
+          <div className='flex items-center justify-center pt-2'>
+            <Skeleton className='h-16 w-full' />
           </div>
         ) : schedules.length === 0 ? (
           <div className='text-center py-8 text-[#A3A3A3]'>No scheduled burns found</div>

@@ -8,6 +8,7 @@ import { formatDistanceToNow } from 'date-fns'
 import { Badge } from '@/components/ui/badge'
 import { ExecutionStatus } from '@prisma/client'
 import { formatTokenAmount } from '@/lib/utils'
+import { Skeleton } from '@/components/ui/skeleton'
 
 interface SystemStatus {
   activeWorkers: number
@@ -72,6 +73,7 @@ export function MonitoringDashboard() {
     lastUpdated: new Date()
   })
   const [executions, setExecutions] = useState<BurnExecution[]>([])
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     fetchData()
@@ -94,6 +96,8 @@ export function MonitoringDashboard() {
       }
     } catch (error) {
       console.error('Error fetching monitoring data:', error)
+    } finally {
+      setLoading(false)
     }
   }
 
@@ -106,10 +110,16 @@ export function MonitoringDashboard() {
             <CardDescription className='text-[#E6E6E6]/60'>Current system state</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className='flex items-center gap-2'>
-              <div className={`h-3 w-3 rounded-full ${systemStatus.isRunning ? 'bg-[#14F195]' : 'bg-[#FF8F00]'}`} />
-              <div className='text-2xl font-bold text-[#E6E6E6]'>{systemStatus.isRunning ? 'Running' : 'Paused'}</div>
-            </div>
+            {loading ? (
+              <div className='flex items-center gap-2 mt-2'>
+                <Skeleton className='h-8 w-24 bg-[#1E1E24]' />
+              </div>
+            ) : (
+              <div className='flex items-center gap-2'>
+                <div className={`h-3 w-3 rounded-full ${systemStatus.isRunning ? 'bg-[#14F195]' : 'bg-[#FF8F00]'}`} />
+                <div className='text-2xl font-bold text-[#E6E6E6]'>{systemStatus.isRunning ? 'Running' : 'Paused'}</div>
+              </div>
+            )}
           </CardContent>
         </Card>
 
@@ -119,7 +129,11 @@ export function MonitoringDashboard() {
             <CardDescription className='text-[#E6E6E6]/60'>Currently running burn workers</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className='text-2xl font-bold text-[#14F195]'>{systemStatus.activeWorkers}</div>
+            {loading ? (
+              <Skeleton className='h-8 w-16 bg-[#1E1E24] mt-2' />
+            ) : (
+              <div className='text-2xl font-bold text-[#14F195]'>{systemStatus.activeWorkers}</div>
+            )}
           </CardContent>
         </Card>
 
@@ -129,7 +143,11 @@ export function MonitoringDashboard() {
             <CardDescription className='text-[#E6E6E6]/60'>Transactions waiting to be processed</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className='text-2xl font-bold text-[#00C2FF]'>{systemStatus.pendingTransactions}</div>
+            {loading ? (
+              <Skeleton className='h-8 w-16 bg-[#1E1E24] mt-2' />
+            ) : (
+              <div className='text-2xl font-bold text-[#00C2FF]'>{systemStatus.pendingTransactions}</div>
+            )}
           </CardContent>
         </Card>
 
@@ -139,7 +157,11 @@ export function MonitoringDashboard() {
             <CardDescription className='text-[#E6E6E6]/60'>Transactions that need attention</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className='text-2xl font-bold text-[#FF8F00]'>{systemStatus.failedTransactions}</div>
+            {loading ? (
+              <Skeleton className='h-8 w-16 bg-[#1E1E24] mt-2' />
+            ) : (
+              <div className='text-2xl font-bold text-[#FF8F00]'>{systemStatus.failedTransactions}</div>
+            )}
           </CardContent>
         </Card>
       </div>
@@ -150,7 +172,17 @@ export function MonitoringDashboard() {
           <CardDescription className='text-[#E6E6E6]/60'>Latest burn execution attempts</CardDescription>
         </CardHeader>
         <CardContent>
-          <DataTable columns={executionColumns} data={executions} pageSize={10} />
+          {loading ? (
+            <div className='space-y-4'>
+              {Array.from({ length: 3 }).map((_, i) => (
+                <div key={i} className=''>
+                  <Skeleton className='h-6 w-full bg-[#1E1E24]' />
+                </div>
+              ))}
+            </div>
+          ) : (
+            <DataTable columns={executionColumns} data={executions} pageSize={10} />
+          )}
         </CardContent>
       </Card>
     </div>
